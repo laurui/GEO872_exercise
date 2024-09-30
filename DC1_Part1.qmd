@@ -5,23 +5,92 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## DC1 Assignment, Part 1 (Spatial Clustering)
 
 ```{r}
-1 + 1
+library(readr) 
+library(tidyverse) 
+library(tidyr) 
+library(sf) 
+#library(dplyr)
 ```
-
-You can add options to executable code like this
 
 ```{r}
-#| echo: false
-2 * 2
+crs_lv03  <- 21781 
+crs_lv95  <- 2056 
+crs_wgs84 <- 4326
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+Task 1:
+
+```{r}
+accidents <- st_read("roadtrafficaccidentlocations.json", crs = crs_lv95)
+#head(accidents)
+```
+
+```{r}
+plot(accidents)
+```
+
+Task 2:
+
+```{r}
+#a. Number of accidents by accident severity category 
+accident_severity <- accidents |>   
+  group_by(AccidentSeverityCategory_de) |>   
+  summarize(count = n()) |>   
+  st_drop_geometry()  
+accident_severity
+```
+
+```{r}
+#b. Number of accidents by accident type 
+accident_type <- accidents |>   
+  group_by(AccidentType_de) |>   
+  summarize(count = n()) |>   
+  st_drop_geometry()  
+accident_type
+```
+
+```{r}
+#c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
+
+# Still need to add the combinations of pedestrians, bicycles, and motorcycles
+selected_involvements <- accidents |>   
+  select(AccidentInvolvingPedestrian, AccidentInvolvingBicycle, AccidentInvolvingMotorcycle)  
+
+accident_involvements <- selected_involvements |>   
+  summarise(across(everything(), ~ sum(. == "true", na.rm = "true"))) %>%   
+  bind_rows(selected_involvements %>%               
+              summarise(across(everything(), ~ sum(. == "false", na.rm = "true"))))|>  
+  st_drop_geometry()  
+
+row.names(accident_involvements) <- c("true", "false")
+
+accident_involvements
+```
+
+Task 3:
+
+```{r}
+```
+
+Task 4:
+
+```{r}
+```
+
+Task 5:
+
+```{r}
+```
+
+Task 6:
+
+```{r}
+```
+
+Task 7:
+
+```{r}
+```
