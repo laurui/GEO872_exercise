@@ -7,12 +7,15 @@ editor: visual
 
 ## DC1 Assignment, Part 1 (Spatial Clustering)
 
+branch testing
+
 ```{r}
 library(readr) 
 library(tidyverse) 
 library(tidyr) 
 library(sf) 
 #library(dplyr)
+library(ggplot2)
 ```
 
 ```{r}
@@ -73,6 +76,47 @@ accident_involvements
 Task 3:
 
 ```{r}
+#accidents per year
+accident_per_year <- accidents |>
+  mutate(AccidentYear = as.numeric(AccidentYear)) |>
+  group_by(AccidentYear) |>   
+  summarize(count_total = n()) |>   
+  st_drop_geometry()  
+accident_per_year
+
+#bicycle accidents per year
+bicycle_accidents_per_year <- accidents |>
+  filter(AccidentInvolvingBicycle == "true") |>
+  mutate(AccidentYear = as.numeric(AccidentYear)) |>
+  group_by(AccidentYear) |>   
+  summarize(count_bicycle = n()) |>   
+  st_drop_geometry()  
+bicycle_accidents_per_year
+
+#combine data
+total_plus_bicycle_per_year = left_join(accident_per_year, bicycle_accidents_per_year, by = "AccidentYear")
+total_plus_bicycle_per_year
+```
+
+```{r}
+ggplot(accident_per_year, aes(x = accident_per_year$AccidentYear, y= accident_per_year$count_total))+
+  geom_line(color = "steelblue", size = 1) +         
+  geom_point(color = "steelblue", size = 2) +         
+  labs(title = "Temporal Evolution of Accidents from 2011 to 2023",
+       x = "Year",
+       y = "Number of Accidents") +
+  theme_minimal() 
+
+ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
+  geom_line(aes(y = count_total, color = "Total Accidents"), size = 1) + 
+  geom_point(aes(y = count_total, color = "Total Accidents"), size = 2) +
+  geom_line(aes(y = count_bicycle, color = "Bicycle Accidents"), size = 1) +
+  geom_point(aes(y = count_bicycle, color = "Bicycle Accidents"), size = 2) +
+  labs(title = "Temporal Evolution of Accidents from 2011 to 2023",
+       x = "Year",
+       y = "Number of Accidents") +
+  scale_color_manual(values = c("Total Accidents" = "navyblue", "Bicycle Accidents" = "brown")) +
+  theme_minimal()
 ```
 
 Task 4:
