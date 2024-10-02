@@ -122,6 +122,14 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
 Task 4:
 
 ```{r}
+bicycle_accidents <- accidents |>
+  filter(AccidentInvolvingBicycle == "true")
+
+bbox <- st_bbox(bicycle_accidents)
+
+osm_basemap <- opq(bbox = bbox) |>
+  add_osm_feature(key = "highway") %>%    # Fetch highways/streets
+  osmdata_sf()
 ```
 
 Task 5:
