@@ -135,6 +135,7 @@ osm_basemap <- opq(bbox = bbox) |>
 Task 5:
 
 ```{r}
+#agdjkdagflisa
 ```
 
 Task 6:
