@@ -16,6 +16,10 @@ library(tidyr)
 library(sf) 
 #library(dplyr)
 library(ggplot2)
+library(osmdata)
+
+if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
+library(dbscan)
 ```
 
 ```{r}
@@ -27,7 +31,7 @@ crs_wgs84 <- 4326
 Task 1:
 
 ```{r}
-accidents <- st_read("roadtrafficaccidentlocations.json", crs = crs_lv95)
+accidents <- st_read("roadtrafficaccidentlocations.json", crs = 4326)
 #head(accidents)
 ```
 
@@ -71,47 +75,6 @@ accident_involvements <- selected_involvements |>
 row.names(accident_involvements) <- c("true", "false")
 
 accident_involvements
-```
-
-```{r}
-#c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
-all_three_involvements <- accidents |> 
-  filter(AccidentInvolvingPedestrian == "true" & 
-         AccidentInvolvingBicycle == "true" & 
-         AccidentInvolvingMotorcycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
-
-all_three_involvements
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
-ped_bike_inv <- accidents |> 
-  filter(AccidentInvolvingPedestrian == "true" & 
-         AccidentInvolvingBicycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
-
-ped_bike_inv
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
-bike_moto_inv <- accidents |> 
-  filter(AccidentInvolvingMotorcycle == "true" & 
-         AccidentInvolvingBicycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
-
-bike_moto_inv
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
-moto_ped_inv <- accidents |> 
-  filter(AccidentInvolvingMotorcycle == "true" & 
-         AccidentInvolvingPedestrian == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
-
-moto_ped_inv
 ```
 
 Task 3:
@@ -169,22 +132,90 @@ bicycle_accidents <- accidents |>
 bbox <- st_bbox(bicycle_accidents)
 
 osm_basemap <- opq(bbox = bbox) |>
-  add_osm_feature(key = "highway") %>%    # Fetch highways/streets
+  add_osm_feature(key="boundary", value = "administrative") %>%
+  add_osm_feature(key="admin_level", value = "8") %>%
   osmdata_sf()
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
+  geom_sf(data = bicycle_accidents, aes(color = bicycle_accidents$AccidentSeverityCategory_en), size = 1.5, alpha = 0.8) +
+  labs(title = "Accidents on OpenStreetMap Basemap",
+       subtitle = "Accidents plotted over streets from OSM",
+       color = "Accident Severity") +
+  coord_sf() +
+  theme_minimal() 
 ```
 
 Task 5:
 
 ```{r}
-#agdjkdagflisa
+#text text text
 ```
 
 Task 6:
 
 ```{r}
+bicycle_crd <- sf::st_coordinates(bicycle_accidents)
 ```
+
+```{r}
+bicycle_accidents_2018 <- bicycle_accidents |>
+  filter(AccidentYear == "2018") 
+
+bicycle_accidents_2019 <- bicycle_accidents |>
+  filter(AccidentYear == "2019") 
+
+bicycle_accidents_2020 <- bicycle_accidents |>
+  filter(AccidentYear == "2020") 
+
+bicycle_accidents_2021 <- bicycle_accidents |>
+  filter(AccidentYear == "2021") 
+```
+
+```{r}
+#| label: dbscan-bicycle-accidents
+
+# ------------------------------------------------------------------------------
+# We first draw the kNN distance plot, maintaining minPts = k = 3.
+dbscan::kNNdistplot(bicycle_crd, k = 3)
+
+# We can somehow see a knee at about 500 m.
+abline(h = 0.003, col = "red")
+
+# But if we thought of this as walking distance, would we want to walk that far?
+# So, let's also try 250 m.
+graphics::abline(h = 0.0015, col = "blue")
+
+# Now compute DBSCAN with different values for eps.
+db <- dbscan::dbscan(bicycle_crd, eps = 0.003, minPts = 3)
+db
+plot(bicycle_crd, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.003 m",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd, eps = 0.0015, minPts = 3)
+db
+plot(bicycle_crd, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.0015 m",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd, eps = 0.0007, minPts = 3)
+db
+plot(bicycle_crd, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.0007 m",
+     asp = 1)
+```
+
+Clusters have to be done for each year separately (2018 to 2021). Understanding it beforehand would be nice.
 
 Task 7:
 
 ```{r}
+
+
 ```
