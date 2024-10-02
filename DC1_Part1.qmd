@@ -77,6 +77,47 @@ row.names(accident_involvements) <- c("true", "false")
 accident_involvements
 ```
 
+```{r}
+#c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
+
+# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+all_three_involvements <- accidents |> 
+  filter(AccidentInvolvingPedestrian == "true" & 
+         AccidentInvolvingBicycle == "true" & 
+         AccidentInvolvingMotorcycle == "true") |>
+  st_drop_geometry()  |>
+  summarise(count = n())
+
+all_three_involvements
+
+# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+ped_bike_inv <- accidents |> 
+  filter(AccidentInvolvingPedestrian == "true" & 
+         AccidentInvolvingBicycle == "true") |>
+  st_drop_geometry()  |>
+  summarise(count = n())
+
+ped_bike_inv
+
+# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+bike_moto_inv <- accidents |> 
+  filter(AccidentInvolvingMotorcycle == "true" & 
+         AccidentInvolvingBicycle == "true") |>
+  st_drop_geometry()  |>
+  summarise(count = n())
+
+bike_moto_inv
+
+# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+moto_ped_inv <- accidents |> 
+  filter(AccidentInvolvingMotorcycle == "true" & 
+         AccidentInvolvingPedestrian == "true") |>
+  st_drop_geometry()  |>
+  summarise(count = n())
+
+moto_ped_inv
+```
+
 Task 3:
 
 ```{r}
