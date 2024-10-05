@@ -5,7 +5,7 @@ format: html
 editor: visual
 ---
 
-## DC1 Assignment, Part 1 (Spatial Clustering)
+# DC1 Assignment, Part 1 (Spatial Clustering)
 
 branch testing
 
@@ -20,6 +20,9 @@ library(osmdata)
 
 if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
 library(dbscan)
+if(!"factoextra" %in% rownames(installed.packages())) install.packages("dbscan")
+library(factoextra)
+
 ```
 
 ```{r}
@@ -28,7 +31,7 @@ crs_lv95  <- 2056
 crs_wgs84 <- 4326
 ```
 
-Task 1:
+## Task 1:
 
 ```{r}
 accidents <- st_read("roadtrafficaccidentlocations.json", crs = 4326)
@@ -39,7 +42,7 @@ accidents <- st_read("roadtrafficaccidentlocations.json", crs = 4326)
 plot(accidents)
 ```
 
-Task 2:
+## Task 2:
 
 ```{r}
 #a. Number of accidents by accident severity category 
@@ -118,7 +121,9 @@ moto_ped_inv <- accidents |>
 moto_ped_inv
 ```
 
-Task 3:
+There seem to be no accidents where all three involvements (bike, motorcycle and pedestrian) were registered.
+
+## Task 3:
 
 ```{r}
 #accidents per year
@@ -159,12 +164,13 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
   geom_point(aes(y = count_bicycle, color = "Bicycle Accidents"), size = 2) +
   labs(title = "Temporal Evolution of Accidents from 2011 to 2023",
        x = "Year",
-       y = "Number of Accidents") +
+       y = "Number of Accidents",
+       colour = 'Legend') +
   scale_color_manual(values = c("Total Accidents" = "navyblue", "Bicycle Accidents" = "brown")) +
   theme_minimal()
 ```
 
-Task 4:
+## Task 4:
 
 ```{r}
 bicycle_accidents <- accidents |>
@@ -179,8 +185,13 @@ osm_basemap <- opq(bbox = bbox) |>
 ```
 
 ```{r}
+zh_city_boundary <- st_read('data/Zurich_city_boundary_2024.gpkg')
+```
+
+```{r}
 ggplot() +
-  geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
+  geom_sf(data = zh_city_boundary) +
+  #geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
   geom_sf(data = bicycle_accidents, aes(color = bicycle_accidents$AccidentSeverityCategory_en), size = 1.5, alpha = 0.8) +
   labs(title = "Accidents on OpenStreetMap Basemap",
        subtitle = "Accidents plotted over streets from OSM",
@@ -189,13 +200,17 @@ ggplot() +
   theme_minimal() 
 ```
 
-Task 5:
+## Task 5:
 
 ```{r}
-#text text text
+#Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.
 ```
 
-Task 6:
+| I would be interested in knowing in what areas of Zurich the most bicycle accidents happen. On the generated map of all bicycle accident one can see that in the city center, close to the main train station there are many accidents. Such accident herds could therefore be detected with more security with a spatial density clustering. Therefore, in this case, the parameter is be the number of accidents. The more accidents on one space
+
+## Task 6:
+
+### Preliminary work
 
 ```{r}
 bicycle_crd <- sf::st_coordinates(bicycle_accidents)
@@ -216,17 +231,34 @@ bicycle_accidents_2021 <- bicycle_accidents |>
 ```
 
 ```{r}
-#| label: dbscan-bicycle-accidents
+bicycle_crd_2018 <- sf::st_coordinates(bicycle_accidents_2018)
 
+bicycle_crd_2019 <- sf::st_coordinates(bicycle_accidents_2019)
+
+bicycle_crd_2020 <- sf::st_coordinates(bicycle_accidents_2020)
+
+bicycle_crd_2021 <- sf::st_coordinates(bicycle_accidents_2021)
+```
+
+```{r}
+#Found this function when looking for a way to find the number of clusters. Source: https://www.rdocumentation.org/packages/factoextra/versions/1.0.7/topics/fviz_nbclust
+fviz_nbclust(bicycle_crd_2021, kmeans, method = "silhouette")
+```
+
+### Bicycle accident clusters all years
+
+```{r}
+#| label: dbscan-bicycle-accidents
+# all years
 # ------------------------------------------------------------------------------
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd, k = 3)
 
-# We can somehow see a knee at about 500 m.
+# We can somehow see a knee at about 0.003 km.
 abline(h = 0.003, col = "red")
 
 # But if we thought of this as walking distance, would we want to walk that far?
-# So, let's also try 250 m.
+# So, let's also try 0.00015 km.
 graphics::abline(h = 0.0015, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
@@ -234,29 +266,214 @@ db <- dbscan::dbscan(bicycle_crd, eps = 0.003, minPts = 3)
 db
 plot(bicycle_crd, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.003 m",
+     main = "DBSCAN result with eps = 0.003 km",
      asp = 1)
 
 db <- dbscan::dbscan(bicycle_crd, eps = 0.0015, minPts = 3)
 db
 plot(bicycle_crd, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.0015 m",
+     main = "DBSCAN result with eps = 0.0015 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd, eps = 0.0007, minPts = 3)
+db <- dbscan::dbscan(bicycle_crd, eps = 0.0008, minPts = 3)
 db
 plot(bicycle_crd, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.0007 m",
+     main = "DBSCAN result with eps = 0.0008 km",
      asp = 1)
 ```
 
-Clusters have to be done for each year separately (2018 to 2021). Understanding it beforehand would be nice.
-
-Task 7:
+### Bicycle accident clusters 2018
 
 ```{r}
+#| label: dbscan-bicycle-accidents
+# 2018
+# ------------------------------------------------------------------------------
+# We first draw the kNN distance plot, maintaining minPts = k = 9.
+dbscan::kNNdistplot(bicycle_crd_2018, k = 3)
 
+# We can somehow see a knee at about 0.015 km.
+abline(h = 0.012, col = "red")
+
+# But if we thought of this as walking distance, would we want to walk that far?
+# So, let's also try 0.005 km.
+graphics::abline(h = 0.005, col = "blue")
+
+# Now compute DBSCAN with different values for eps.
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.012, minPts = 3)
+db
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.012 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.005, minPts = 3)
+db
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.005 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.0025, minPts = 3)
+db
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.0025 km",
+     asp = 1)
+```
+
+### Bicycle accident clusters 2019
+
+```{r}
+#| label: dbscan-bicycle-accidents
+# 2019
+# ------------------------------------------------------------------------------
+# We first draw the kNN distance plot, maintaining minPts = k = 9.
+dbscan::kNNdistplot(bicycle_crd_2019, k = 3)
+
+# We can somehow see a knee at about 0.014 km.
+abline(h = 0.01, col = "red")
+
+# But if we thought of this as walking distance, would we want to walk that far?
+# So, let's also try  0.005 km.
+graphics::abline(h = 0.004, col = "blue")
+
+# Now compute DBSCAN with different values for eps.
+db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.01, minPts = 3)
+db
+plot(bicycle_crd_2019, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.01 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.004, minPts = 3)
+db
+plot(bicycle_crd_2019, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.004 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.002, minPts = 3)
+db
+plot(bicycle_crd_2019, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.002 km",
+     asp = 1)
+```
+
+### Bicycle accident clusters 2020
+
+```{r}
+#| label: dbscan-bicycle-accidents
+# 2020
+# ------------------------------------------------------------------------------
+# We first draw the kNN distance plot, maintaining minPts = k = 3.
+dbscan::kNNdistplot(bicycle_crd_2020, k = 3)
+
+# We can somehow see a knee at about 0.014 km.
+abline(h = 0.014, col = "red")
+
+# But if we thought of this as walking distance, would we want to walk that far?
+# So, let's also try  0.005 km.
+graphics::abline(h = 0.005, col = "blue")
+
+# Now compute DBSCAN with different values for eps.
+db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.014, minPts = 3)
+db
+plot(bicycle_crd_2020, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.014 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.005, minPts = 3)
+db
+plot(bicycle_crd_2020, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.005 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.0025, minPts = 3)
+db
+plot(bicycle_crd_2020, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.0025 km",
+     asp = 1)
+```
+
+### Bicycle accident clusters 2021
+
+```{r}
+#| label: dbscan-bicycle-accidents
+# 2021
+# ------------------------------------------------------------------------------
+# We first draw the kNN distance plot, maintaining minPts = k = 3.
+dbscan::kNNdistplot(bicycle_crd_2021, k = 3)
+
+# We can somehow see a knee at about 0.014 km.
+abline(h = 0.012, col = "red")
+
+# But if we thought of this as walking distance, would we want to walk that far?
+# So, let's also try  0.005 km.
+graphics::abline(h = 0.004, col = "blue")
+
+# Now compute DBSCAN with different values for eps.
+db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.012, minPts = 3)
+db
+plot(bicycle_crd_2021, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.012 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.004, minPts = 3)
+db
+plot(bicycle_crd_2021, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.004 km",
+     asp = 1)
+
+db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.002, minPts = 3)
+db
+plot(bicycle_crd_2021, 
+     cex = 0.5, pch = 19, col = db$cluster + 1,
+     main = "DBSCAN result with eps = 0.002 km",
+     asp = 1)
+```
+
+### Trying OPTICS algorithm
+
+Here, the help of ChatGPT was used to get the OPTICS algorithm right.
+
+```{r}
+# First run with eps = 0.05 and minPts = 3
+db <- dbscan::optics(bicycle_crd_2018, eps = 0.05, minPts = 3)
+db
+clusters <- dbscan::extractXi(db, xi = 0.05)
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = clusters$cluster + 1,
+     main = "OPTICS extracted clusters (eps = 0.05, minPts = 3)",
+     asp = 1)
+
+# Second run with eps = 0.015 and minPts = 5
+db <- dbscan::optics(bicycle_crd_2018, eps = 0.015, minPts = 5)
+db
+clusters <- dbscan::extractXi(db, xi = 0.05)  # Re-extract clusters for this run
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = clusters$cluster + 1,
+     main = "OPTICS extracted clusters (eps = 0.015, minPts = 5)",
+     asp = 1)
 
 ```
+
+## Task 7:
+
+Discuss your results, including also limitations or problems, and possible other methods
+that you could have used.
+
+| When computing the clusters for all bike accident years, the diagram seems too crowded to deduce helpful information.
+| In the cluster diagrams of the years 2018-2021 there is not too much variation from one year to another. What stands out in every diagram, at least the two more accurate ones (with the two smallest eps distance) show the kernel around the main train station nicely. We could say that the Zurich HB/ Central acts as a bicycle accident herd. This is no surprise as many tram lines pass by the Zurich HB, as well as that is very often crowded with cars, pedestrians and cyclists. 
+| 
+
+| The OPTICS algorithm has been used as a comparison. However,  another method which could have been used was the convex cluster hulls. In some parts of Zurich that might have been an addition to the straight forward analysis but for example around HB we would have no holes within the spaces of large density. 
+| 
+| What can be said as limiting factors is that the streets were not included in the calculation. It would be interesting to know if most accidents happen on main or peripheral streets. Moreover, the time has not been included either. We could filter for the rush hour in a next step, in order to analyse the accidents during that time. There, we might have other herds than when looking at all the accidents. 
