@@ -14,9 +14,10 @@ library(readr)
 library(tidyverse) 
 library(tidyr) 
 library(sf) 
-#library(dplyr)
+library(dplyr)
 library(ggplot2)
 library(osmdata)
+library(phonTools)
 
 if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
 library(dbscan)
@@ -206,7 +207,10 @@ ggplot() +
 #Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.
 ```
 
-| I would be interested in knowing in what areas of Zurich the most bicycle accidents happen. On the generated map of all bicycle accident one can see that in the city center, close to the main train station there are many accidents. Such accident herds could therefore be detected with more security with a spatial density clustering. Therefore, in this case, the parameter is be the number of accidents. The more accidents on one space
+| We would be interested in knowing in what areas of Zurich the most bicycle accidents happen. On the generated map of all bicycle accident one can see that in the city center, close to the main train station there are many accidents. Such accident herds could therefore be detected with more security with a spatial density clustering.
+| The accidents should occur within close proximity to one another, which indicates a spatial dependence. A threshold for maximum distance between accidents would be used in this case, as well as the minimum number of points within a cluster.
+| 
+| Parameters: Distance from one point to another and the minimum number of accidents within the defined distance radius to form a cluster.
 
 ## Task 6:
 
@@ -232,56 +236,21 @@ bicycle_accidents_2021 <- bicycle_accidents |>
 
 ```{r}
 bicycle_crd_2018 <- sf::st_coordinates(bicycle_accidents_2018)
+bicycle_crd_2018 <- bicycle_crd_2018[, !(colnames(bicycle_crd_2018) %in% "Z")]
 
 bicycle_crd_2019 <- sf::st_coordinates(bicycle_accidents_2019)
+bicycle_crd_2019 <- bicycle_crd_2019[, !(colnames(bicycle_crd_2019) %in% "Z")]
 
 bicycle_crd_2020 <- sf::st_coordinates(bicycle_accidents_2020)
+bicycle_crd_2020 <- bicycle_crd_2020[, !(colnames(bicycle_crd_2020) %in% "Z")]
 
 bicycle_crd_2021 <- sf::st_coordinates(bicycle_accidents_2021)
+bicycle_crd_2021 <- bicycle_crd_2021[, !(colnames(bicycle_crd_2021) %in% "Z")]
 ```
 
 ```{r}
 #Found this function when looking for a way to find the number of clusters. Source: https://www.rdocumentation.org/packages/factoextra/versions/1.0.7/topics/fviz_nbclust
 fviz_nbclust(bicycle_crd_2021, kmeans, method = "silhouette")
-```
-
-### Bicycle accident clusters all years
-
-```{r}
-#| label: dbscan-bicycle-accidents
-# all years
-# ------------------------------------------------------------------------------
-# We first draw the kNN distance plot, maintaining minPts = k = 3.
-dbscan::kNNdistplot(bicycle_crd, k = 3)
-
-# We can somehow see a knee at about 0.003 km.
-abline(h = 0.003, col = "red")
-
-# But if we thought of this as walking distance, would we want to walk that far?
-# So, let's also try 0.00015 km.
-graphics::abline(h = 0.0015, col = "blue")
-
-# Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd, eps = 0.003, minPts = 3)
-db
-plot(bicycle_crd, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.003 km",
-     asp = 1)
-
-db <- dbscan::dbscan(bicycle_crd, eps = 0.0015, minPts = 3)
-db
-plot(bicycle_crd, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.0015 km",
-     asp = 1)
-
-db <- dbscan::dbscan(bicycle_crd, eps = 0.0008, minPts = 3)
-db
-plot(bicycle_crd, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.0008 km",
-     asp = 1)
 ```
 
 ### Bicycle accident clusters 2018
@@ -290,36 +259,35 @@ plot(bicycle_crd,
 #| label: dbscan-bicycle-accidents
 # 2018
 # ------------------------------------------------------------------------------
-# We first draw the kNN distance plot, maintaining minPts = k = 9.
+# We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2018, k = 3)
 
-# We can somehow see a knee at about 0.015 km.
-abline(h = 0.012, col = "red")
+# We can somehow see a knee at about 0.009 km.
+abline(h = 0.009, col = "red")
 
-# But if we thought of this as walking distance, would we want to walk that far?
 # So, let's also try 0.005 km.
-graphics::abline(h = 0.005, col = "blue")
+graphics::abline(h = 0.004, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.012, minPts = 3)
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.009, minPts = 3)
 db
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.012 km",
+     main = "DBSCAN result with eps = 0.009 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.005, minPts = 3)
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.004, minPts = 3)
 db
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.005 km",
+     main = "DBSCAN result with eps = 0.004 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.0025, minPts = 3)
+db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.002, minPts = 3)
 db
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.0025 km",
+     main = "DBSCAN result with eps = 0.002 km",
      asp = 1)
 ```
 
@@ -329,13 +297,12 @@ plot(bicycle_crd_2018,
 #| label: dbscan-bicycle-accidents
 # 2019
 # ------------------------------------------------------------------------------
-# We first draw the kNN distance plot, maintaining minPts = k = 9.
+# We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2019, k = 3)
 
 # We can somehow see a knee at about 0.014 km.
 abline(h = 0.01, col = "red")
 
-# But if we thought of this as walking distance, would we want to walk that far?
 # So, let's also try  0.005 km.
 graphics::abline(h = 0.004, col = "blue")
 
@@ -374,7 +341,6 @@ dbscan::kNNdistplot(bicycle_crd_2020, k = 3)
 # We can somehow see a knee at about 0.014 km.
 abline(h = 0.014, col = "red")
 
-# But if we thought of this as walking distance, would we want to walk that far?
 # So, let's also try  0.005 km.
 graphics::abline(h = 0.005, col = "blue")
 
@@ -410,11 +376,10 @@ plot(bicycle_crd_2020,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2021, k = 3)
 
-# We can somehow see a knee at about 0.014 km.
+# We can somehow see a knee at about 0.012 km.
 abline(h = 0.012, col = "red")
 
-# But if we thought of this as walking distance, would we want to walk that far?
-# So, let's also try  0.005 km.
+# So, let's also try  0.004 km.
 graphics::abline(h = 0.004, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
@@ -467,13 +432,116 @@ plot(bicycle_crd_2018,
 
 ## Task 7:
 
-Discuss your results, including also limitations or problems, and possible other methods
-that you could have used.
+Discuss your results, including also limitations or problems, and possible other methods that you could have used.
 
-| When computing the clusters for all bike accident years, the diagram seems too crowded to deduce helpful information.
-| In the cluster diagrams of the years 2018-2021 there is not too much variation from one year to another. What stands out in every diagram, at least the two more accurate ones (with the two smallest eps distance) show the kernel around the main train station nicely. We could say that the Zurich HB/ Central acts as a bicycle accident herd. This is no surprise as many tram lines pass by the Zurich HB, as well as that is very often crowded with cars, pedestrians and cyclists. 
+| In the cluster diagrams of the years 2018-2021 there is not too much variation from one year to another. What stands out in every diagram, at least the two more accurate ones (with the two smallest eps distance) show the kernel around the main train station nicely. We could say that the Zurich HB/ Central acts as a bicycle accident herd. This is no surprise as many tram lines pass by the Zurich HB, as well as that is very often crowded with cars, pedestrians and cyclists.
 | 
 
-| The OPTICS algorithm has been used as a comparison. However,  another method which could have been used was the convex cluster hulls. In some parts of Zurich that might have been an addition to the straight forward analysis but for example around HB we would have no holes within the spaces of large density. 
+| The OPTICS algorithm has been used as a comparison. However, another method which could have been used was the convex cluster hulls. In some parts of Zurich that might have been an addition to the straight forward analysis but for example around HB we would have no holes within the spaces of large density.
 | 
-| What can be said as limiting factors is that the streets were not included in the calculation. It would be interesting to know if most accidents happen on main or peripheral streets. Moreover, the time has not been included either. We could filter for the rush hour in a next step, in order to analyse the accidents during that time. There, we might have other herds than when looking at all the accidents. 
+| What can be said as limiting factors is that the streets were not included in the calculation. It would be interesting to know if most accidents happen on main or peripheral streets. Moreover, the time has not been included either. We could filter for the rush hour in a next step, in order to analyse the accidents during that time. There, we might have other herds than when looking at all the accidents.
+
+## Task 8:
+
+### 8a)
+
+| The method should be able to detect an area which is very dense in bicycle accidents. It should work kind of like a heat map, where we see a center where many accidents happen on the same spot and towards the edges there are less and less. Therefore, the polygon should be drawn at the border between "many accidents and less accidents".
+
+### 8b)
+
+| Based on the criteria above, we would chose the **Kernel Density Estimation (KDE) with bandwidth selection method HREF.** With this method, we could define clusters based on areas where KDE values exceed a certain threshold, indicating high accident concentration.
+| As we don't have attributes which we want to use to cluster the accidents but only the densities on the map such a method would be suitable. However, we wonder if it's possible to generate this cluster estimation with more than one center.
+| As an alternative, the method the Standard Deviation Ellipse will be tried out.
+| 
+| 
+
+## Task 9:
+
+*das une isch leider nid so vielussegend... vilicht wär KDE wük besser, aber chunnt ersch in vl 4 vor....*
+
+```{r}
+
+#| label: sde-phonTools
+
+## Standard deviational ellipse (SDE) with phonTools::sdellipse()
+
+# sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
+# above from the SF object using sf::st_coordinates().
+
+sde_crd <- phonTools::sdellipse(bicycle_crd_2018, stdev = 1, show = FALSE)
+
+ggplot() +
+  geom_polygon(aes(x = sde_crd[,1], y = sde_crd[,2]), 
+               colour = "darkgreen", fill = "lightgreen", 
+               linewidth = 0.8, alpha = 0.4) +
+  geom_sf(data = bicycle_accidents_2018) +
+  geom_point(aes(x = mean(bicycle_crd_2018[,1]), y = mean(sde_crd[,2])), 
+                 colour = "red", size = 3) +
+  coord_sf(datum = crs_wgs84) +
+  xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
+  ggtitle("Standard Deviational Ellipse for Bicycle Accidents 2018")
+
+```
+
+```{r}
+#| label: sde-phonTools
+
+## Standard deviational ellipse (SDE) with phonTools::sdellipse()
+
+# sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
+# above from the SF object using sf::st_coordinates().
+
+sde_crd <- phonTools::sdellipse(bicycle_crd_2019, stdev = 1, show = FALSE)
+
+ggplot() +
+  geom_polygon(aes(x = sde_crd[,1], y = sde_crd[,2]), 
+               colour = "darkgreen", fill = "lightgreen", 
+               linewidth = 0.8, alpha = 0.4) +
+  geom_sf(data = bicycle_accidents_2018) +
+  geom_point(aes(x = mean(bicycle_crd_2019[,1]), y = mean(sde_crd[,2])), 
+                 colour = "red", size = 3) +
+  coord_sf(datum = crs_wgs84) +
+  xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
+  ggtitle("Standard Deviational Ellipse for Bicycle Accidents 2019")
+
+```
+
+## Jaccard Index:
+
+```{r}
+#In order to compute the jaccard index, the matrices have to become the same length, we therefore shorten all four years to the shortest of the four. 
+
+# Find the minimum number of rows among all matrices
+min_length <- min(nrow(bicycle_crd_2018), nrow(bicycle_crd_2019), nrow(bicycle_crd_2020), nrow(bicycle_crd_2021))
+
+# Shorten all matrices to have the same number of rows as the smallest matrix
+matrix18 <- bicycle_crd_2018[1:min_length, ]
+matrix19 <- bicycle_crd_2019[1:min_length, ]
+matrix20 <- bicycle_crd_2020[1:min_length, ]
+matrix21 <- bicycle_crd_2021[1:min_length, ]
+
+```
+
+```{r}
+#adehabitatHR::kerneloverlap()
+install.packages("vegan")
+library(vegan)
+df<-data.frame(matrix18, matrix19)
+vegdist(df, method = "jaccard")
+
+```
+
+```{r}
+#Found this jaccard index function here: https://www.r-bloggers.com/2021/11/how-to-calculate-jaccard-similarity-in-r-2/
+#Define the function:
+jaccard <- function(a, b) {
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+#Compute the similarity between the matrices of bike accidents in 2018 and 2019
+jaccard(matrix18, matrix19)
+```
+
+Task 10:\
