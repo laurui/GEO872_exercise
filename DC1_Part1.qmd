@@ -269,24 +269,24 @@ abline(h = 0.009, col = "red")
 graphics::abline(h = 0.004, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.009, minPts = 3)
-db
+db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.009, minPts = 3)
+db18_01
 plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db18_01$cluster + 1,
      main = "DBSCAN result with eps = 0.009 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.004, minPts = 3)
-db
+db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.004, minPts = 3)
+db18_02
 plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db18_02$cluster + 1,
      main = "DBSCAN result with eps = 0.004 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2018, eps = 0.002, minPts = 3)
-db
+db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.002, minPts = 3)
+db18_03
 plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db18_03$cluster + 1,
      main = "DBSCAN result with eps = 0.002 km",
      asp = 1)
 ```
@@ -307,24 +307,24 @@ abline(h = 0.01, col = "red")
 graphics::abline(h = 0.004, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.01, minPts = 3)
-db
+db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.01, minPts = 3)
+db19_01
 plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db19_01$cluster + 1,
      main = "DBSCAN result with eps = 0.01 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.004, minPts = 3)
-db
+db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.004, minPts = 3)
+db19_02
 plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db19_02$cluster + 1,
      main = "DBSCAN result with eps = 0.004 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2019, eps = 0.002, minPts = 3)
-db
+db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.002, minPts = 3)
+db19_03
 plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db19_03$cluster + 1,
      main = "DBSCAN result with eps = 0.002 km",
      asp = 1)
 ```
@@ -345,24 +345,24 @@ abline(h = 0.014, col = "red")
 graphics::abline(h = 0.005, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.014, minPts = 3)
-db
+db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.014, minPts = 3)
+db20_01
 plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db20_01$cluster + 1,
      main = "DBSCAN result with eps = 0.014 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.005, minPts = 3)
-db
+db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.005, minPts = 3)
+db20_02
 plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db20_02$cluster + 1,
      main = "DBSCAN result with eps = 0.005 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2020, eps = 0.0025, minPts = 3)
-db
+db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.0025, minPts = 3)
+db20_03
 plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db20_03$cluster + 1,
      main = "DBSCAN result with eps = 0.0025 km",
      asp = 1)
 ```
@@ -383,24 +383,24 @@ abline(h = 0.012, col = "red")
 graphics::abline(h = 0.004, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.012, minPts = 3)
-db
+db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.012, minPts = 3)
+db21_01
 plot(bicycle_crd_2021, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db21_01$cluster + 1,
      main = "DBSCAN result with eps = 0.012 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.004, minPts = 3)
-db
+db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.003, minPts = 3)
+db21_02
 plot(bicycle_crd_2021, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
-     main = "DBSCAN result with eps = 0.004 km",
+     cex = 0.5, pch = 19, col = db21_02$cluster + 1,
+     main = "DBSCAN result with eps = 0.003 km",
      asp = 1)
 
-db <- dbscan::dbscan(bicycle_crd_2021, eps = 0.002, minPts = 3)
-db
+db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.002, minPts = 3)
+db21_03
 plot(bicycle_crd_2021, 
-     cex = 0.5, pch = 19, col = db$cluster + 1,
+     cex = 0.5, pch = 19, col = db21_03$cluster + 1,
      main = "DBSCAN result with eps = 0.002 km",
      asp = 1)
 ```
@@ -506,7 +506,7 @@ ggplot() +
 
 ```
 
-## Jaccard Index:
+### Jaccard Index:
 
 ```{r}
 #In order to compute the jaccard index, the matrices have to become the same length, we therefore shorten all four years to the shortest of the four. 
@@ -544,4 +544,46 @@ jaccard <- function(a, b) {
 jaccard(matrix18, matrix19)
 ```
 
-Task 10:\
+## Task 10:
+
+Trying to plot four graphs next to each other
+
+```{r}
+# 4 figures arranged in 2 rows and 2 columns
+par(mfrow = c(2, 2),
+    mar = c(4, 4, 1, 1),  # Margin sizes: c(bottom, left, top, right)
+    oma = c(1, 1, 2, 1))  # Outer margin sizes: c(bottom, left, top, right)
+
+
+# Plot for the year 2018
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = db18_03$cluster + 1,
+     main = "DBSCAN result with eps = 0.002 km (2018)",
+     asp = 1)
+
+# Plot for the year 2019
+plot(bicycle_crd_2019, 
+     cex = 0.5, pch = 19, col = db19_03$cluster + 1,
+     main = "DBSCAN result with eps = 0.002 km (2019)",
+     asp = 1)
+
+# Plot for the year 2020
+plot(bicycle_crd_2020, 
+     cex = 0.5, pch = 19, col = db20_03$cluster + 1,
+     main = "DBSCAN result with eps = 0.0025 km (2020)",
+     asp = 1)
+
+# Plot for the year 2021
+plot(bicycle_crd_2021, 
+     cex = 0.5, pch = 19, col = db21_03$cluster + 1,
+     main = "DBSCAN result with eps = 0.002 km (2021)",
+     asp = 1)
+
+```
+
+*Task 10: Overall, what did you find with the above steps? What do these steps tell you about
+the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing
+the given data? Any other points of note?*
+
+| The above steps and graphs show us that the largest accident herd in the city of Zurich is between the upper end of lake Zurich and Letten. On all the graphs, a large blob of points can be seen. On the standard deviational ellipse we could also see this well.
+| However, we cannot tell much about the other areas and streets around it as the point clusters don't seem like the best option to analyse such herds. This method with coloring the different clusters seems more adapt for datasets wich are to be clustered by classes. As we don't have classes here we want to distinguish but rather analyse denisties, a kernel density estimation would be of more interest. 
