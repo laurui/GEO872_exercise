@@ -17,7 +17,7 @@ editor: visual
 
 -   kurzes feedback zu unserem zwischenstand? in etwa was sie sich vorgestellt haben??
 
--   **criteria for using KDE:** was ist gemeint? (evtl im buch)
+-   **criteria for using KDE:** was ist gemeint? (evtl im buch –\> sind einfach kernel shape und bandwidth, nicht mehr)
 
 ## Notizen für uns
 
@@ -627,7 +627,7 @@ plot(bicycle_crd_2021,
 
 Similarly to the clustering and polygon delineation tasks carried out in Parts 1 and 2 of DC1, respectively, start off by defining **criteria for using KDE to detect areas/hotspots of elevated bicycle accident density**, and explain your reasoning.
 
-Bandwidth selection and the kernel function are the key criteria to define for using KDE.
+Bandwidth selection and the kernel shape are the key criteria to define for using KDE.
 
 What else should we write here?!
 
@@ -704,7 +704,7 @@ legend("topright", c("HR 50%", "HR 95%"),
 cat("Size of home range with HREF (95 %): ", hr95$area, sep = "", "\n")
 cat("Size of core area with HREF (50 %): ", hr50$area, sep = "", "\n")
 
-# Now use the reference least-squares cross-validation nethod (h = "LSCV")
+# Now use the reference least-squares cross-validation method (h = "LSCV")
 # Positioning of legend box is optimized for knitr HTML output
 ud <- adehabitatHR::kernelUD(bicycle_crds_18_sp, grid = grid_val, extent = ext_val, h = "LSCV")
 hr95 <- adehabitatHR::getverticeshr(ud, percent = 95)   # retrieve home range (95th volume percentile)
