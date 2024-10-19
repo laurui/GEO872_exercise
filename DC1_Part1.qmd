@@ -45,6 +45,8 @@ if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
 library(dbscan)
 if(!"factoextra" %in% rownames(installed.packages())) install.packages("dbscan")
 library(factoextra)
+if(!"spatstat" %in% rownames(installed.packages())) install.packages("dbscan")
+library(spatstat)
 
 ```
 
@@ -257,6 +259,7 @@ bicycle_accidents_2021 <- bicycle_accidents |>
 ```
 
 ```{r}
+#keep only X and Y coordinates for the further analysis, remove Z because it's 0 anyway
 bicycle_crd_2018 <- sf::st_coordinates(bicycle_accidents_2018)
 bicycle_crd_2018 <- bicycle_crd_2018[, !(colnames(bicycle_crd_2018) %in% "Z")]
 
@@ -795,6 +798,122 @@ length(bicycle_accidents_2018$value) == nrow(matrix18)
 
 Compute the “volume of intersection” (“VI”) between the KDE surfaces (utilization distributions) of the two years. Hint: There are different ways to do that, but the adehabitatHR package has functionality for that. How do the results correspond to those of Task 9 (Jaccard Index or IoU)?
 
+```{r}
+#theory:
+https://rdrr.io/cran/adehabitatHR/man/kerneloverlap.html
+
+#kernel_18_VI <- kerneloverlap(spatial_points, method = "VI", percent = 95, conditional = FALSE)
+#plot(kernel_18_VI)
+```
+
+```{r}
+# Extract the coordinates from the sf object into a matrix
+coords_matrix <- sf::st_coordinates(bicycle_accidents_2018)
+
+# Display the column names of the coordinates matrix to verify
+print(colnames(coords_matrix))
+
+# Now select only the relevant columns (usually labeled as X and Y) for conversion
+coords_matrix_xy <- coords_matrix[, c("X", "Y")]
+
+# Load the sp package
+library(sp)
+
+# Convert the coordinates to a SpatialPoints object
+spatial_points <- SpatialPoints(coords_matrix_xy, proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+head(spatial_points)
+
+# Use the SpatialPoints object in the kerneloverlap function
+#kernel_18_VI <- kerneloverlap(spatial_points, method = "VI", percent = 95, conditional = FALSE)
+
+```
+
 ## Task 14
 
 Discuss your results for this part of DC1 (density estimation). What did you find? Compare the results of this part with the clusters/polygons of Parts 1 and 2 (see note below): What are the commonalities? What are the differences? Which method(s) perform more ade- quately than others for the given problem and data? Which method(s) would you recommend, and which ones not? Why? (You are free to add more points to the discussion.)
+
+```{r}
+
+```
+
+## Task 15
+
+Choose one or more distance measure functions (justify your choice) and compute it/them for a. all bicycle accidents (2011 - 2021) b. bicycle accidents for one of the years selected in Task 6 c. bicycle accidents for only the cluster points of the year selected in (b) Restrict your analysis to the “inner city” and use the same window for all point sets. It’s up to you to define the extent of the “inner city” and explain/justify what that means in terms of this data challenge.
+
+### a)
+
+```{r}
+win_all <- as.owin(st_bbox(bicycle_accidents))
+bicycle_crd_ppp <- spatstat.geom::ppp(x = bicycle_crd[,1], y = bicycle_crd[,2], window = win, unitname = c("meter", "meters"))
+
+# Compute K-function using Kest(), with edge correction.
+bicycle_crd_kf <- spatstat.explore::Kest(bicycle_crd_ppp, correction = "Ripley")
+
+# When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
+# that overwrites the basic plot() function and specializes it.
+plot(bicycle_crd_kf, main = "K-function for all bicycle accidents points")
+```
+
+### b)
+
+```{r}
+win <- as.owin(st_bbox(bicycle_accidents_2018))
+bicycle_crd18_ppp <- spatstat.geom::ppp(x = bicycle_crd_2018[,1], y = bicycle_crd_2018[,2], window = win, unitname = c("meter", "meters"))
+```
+
+```{r}
+#| label: K-fun
+#| 
+# Compute K-function using Kest(), with edge correction.
+bicycle_crd18_kf <- spatstat.explore::Kest(bicycle_crd18_ppp, correction = "Ripley")
+
+# When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
+# that overwrites the basic plot() function and specializes it.
+plot(bicycle_crd18_kf, main = "K-function for bicycle accidents 2018 points")
+```
+
+### c)
+
+```{r}
+#not working yet - db18_02 has sf format and needs to be a matrix (maybe using normal crds 18 works?)
+db18_02_ppp <- spatstat.geom::ppp(x = db18_02[,1], y = db18_02[,2], window = win, unitname = c("meter", "meters"))
+
+# Compute K-function using Kest(), with edge correction.
+db18_02_kf <- spatstat.explore::Kest(db18_02_ppp, correction = "Ripley")
+
+# When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
+# that overwrites the basic plot() function and specializes it.
+plot(db18_02_kf, main = "K-function for bicycle accidents 2018 points")
+```
+
+## Task 16
+
+Now choose the following two pairs of years, 2018 & 2019, as well as 2018 & 2021, and compute the cross-X function, where “X” stands for the function(s) you used in Task 15. Use the AccidentYear as the marks to produce a marked point pattern.
+
+```{r}
+
+```
+
+## Task 17
+
+Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.
+
+```{r}
+
+```
+
+## Task 18
+
+From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, compute the counts within the ‘statistical zones’ of Zurich and use these counts to compute the Getis-Ord G\*-statistic for each of your counts layers. Visualize your results appropriately.
+
+```{r}
+
+```
+
+## Task 19
+
+Discuss your results. What did you find regarding the hot and cold spots in your acci- dent count layers? How do they compare to each other across layers and across (past) methods? etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial weight formation) on your results.
+
+| blabla
+| 
