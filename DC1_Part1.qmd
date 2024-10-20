@@ -40,6 +40,7 @@ library(dplyr)
 library(ggplot2)
 library(osmdata)
 library(phonTools)
+library(spdep)
 
 if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
 library(dbscan)
@@ -800,7 +801,7 @@ Compute the “volume of intersection” (“VI”) between the KDE surfaces (ut
 
 ```{r}
 #theory:
-https://rdrr.io/cran/adehabitatHR/man/kerneloverlap.html
+#https://rdrr.io/cran/adehabitatHR/man/kerneloverlap.html
 
 #kernel_18_VI <- kerneloverlap(spatial_points, method = "VI", percent = 95, conditional = FALSE)
 #plot(kernel_18_VI)
@@ -845,7 +846,7 @@ Choose one or more distance measure functions (justify your choice) and compute 
 
 ```{r}
 win_all <- as.owin(st_bbox(bicycle_accidents))
-bicycle_crd_ppp <- spatstat.geom::ppp(x = bicycle_crd[,1], y = bicycle_crd[,2], window = win, unitname = c("meter", "meters"))
+bicycle_crd_ppp <- spatstat.geom::ppp(x = bicycle_crd[,1], y = bicycle_crd[,2], window = win_all, unitname = c("meter", "meters"))
 
 # Compute K-function using Kest(), with edge correction.
 bicycle_crd_kf <- spatstat.explore::Kest(bicycle_crd_ppp, correction = "Ripley")
@@ -892,7 +893,28 @@ plot(db18_02_kf, main = "K-function for bicycle accidents 2018 points")
 Now choose the following two pairs of years, 2018 & 2019, as well as 2018 & 2021, and compute the cross-X function, where “X” stands for the function(s) you used in Task 15. Use the AccidentYear as the marks to produce a marked point pattern.
 
 ```{r}
+#marked ppp using setmarks() and the "AccidentYear" attribute
+bicycle_marks_ppp <- spatstat.geom::setmarks(bicycle_crd_ppp, factor(bicycle_accidents$AccidentYear))
+```
 
+```{r}
+#Cross-K-function 2018 and 2019
+# Compute K-function using Kest(), with edge correction.
+bicycle_crd_kcross <- spatstat.explore::Kcross(bicycle_marks_ppp,i = "2018", j = "2019", correction = "Ripley")
+
+# When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
+# that overwrites the basic plot() function and specializes it.
+plot(bicycle_crd_kcross, main = "Cross-K-function for all bicycle accidents points 2018 and 2019")
+```
+
+```{r}
+#Cross-K-function
+# Compute K-function using Kest(), with edge correction.
+bicycle_crd_kcross <- spatstat.explore::Kcross(bicycle_marks_ppp,i = "2018", j = "2021", correction = "Ripley")
+
+# When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
+# that overwrites the basic plot() function and specializes it.
+plot(bicycle_crd_kcross, main = "Cross-K-function for all bicycle accidents points 2018 and 2021")
 ```
 
 ## Task 17
@@ -907,8 +929,73 @@ Discuss your results. Similarities and differences between the various point set
 
 From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, compute the counts within the ‘statistical zones’ of Zurich and use these counts to compute the Getis-Ord G\*-statistic for each of your counts layers. Visualize your results appropriately.
 
-```{r}
+--\> ich nimme mal 2 accident types, mer chönds ja nachher au ändere wenn öppis anders schlauer erschiint.
 
+```{r}
+#counts of two severity types (counts are needed for the Getis-Ord G-statistic)
+bicycle_severities <- bicycle_accidents |>   
+  group_by(AccidentSeverityCategory_en) |>
+  filter(AccidentSeverityCategory_en == "Accident with light injuries" | AccidentSeverityCategory_en == "Accident with severe injuries") |>
+  summarize(count = n()) |>   
+  st_drop_geometry()  
+bicycle_severities
+
+```
+
+```{r}
+#get rid of the z-coordinate in the geometry
+bicycle_accidents <- st_zm(bicycle_accidents)
+coords_2d <- st_zm(st_geometry(bicycle_accidents))
+```
+
+```{r}
+#| label: g-stat-weights
+#| 
+# library("spdep")
+
+# Find nearest neighbors within 20 kilometers (= 20000 m).
+# You should play with nn.dis and see what it does to connectivity.
+nn_dis <- 20000
+
+# We first call dnearneigh() with min. distance = 0 and max. distance = nn_dis.
+# This creates an nb object, that is, a list of Euclidean neighbors for each 
+# point in sads_comp_sp.
+bicycle_accidents_nb <- spdep::dnearneigh(bicycle_accidents, 0, nn_dis)
+
+# We then call nb2listw() to convert the nb object sads_nb_u into a 
+# listw object sads_lw_u, which contains the spatial weights used to 
+# compute the G-statistic. Style = 'B' means that binary weights are generated 
+# (1 if inside nn_dis, 0 if outside nn_dis). Using the include.self() function
+# includes the self-weights w_{ii} > 0, and thus later results in Gi* statistics
+# being computed instead of simply G statistics.
+bicycle_accidents_lw <- spdep::nb2listw(spdep::include.self(bicycle_accidents_nb), style = "B")
+
+```
+
+--\> de folgendi chunk lauft irgendwie nie richtig dure und bim abbreche chunnt folgende Fehler: Fehler in db18_02\[, 1\] : falsche Anzahl von Dimensionen. Kei Ahnig wieso aber irgendwie schiints verchnüpft zsii oder R isch wieder am abkacke bi mir. Obe bim Task 15c chunnt de Fehler mit de Dimensione bi mir au. Check nöd wieso
+
+```{r}
+# Create the line links from the nb object, requesting an sf object to be returned.
+# CRS needs to be set as it was carried over to the nb object.
+bicycle_accidentss_links <-
+  spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
+
+bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
+
+# Plot the neighbor links using functions from the tmap package
+tmap::tm_shape(cantons_bound) + tmap::tm_borders(col = "gray") +
+  tmap::tm_shape(sads_links) + tmap::tm_lines(col = "red", lwd = 0.5) +
+  tmap::tm_shape(bicycle_accidents) + tmap::tm_dots(col = "black", size = 0.1) +
+  tmap::tm_scale_bar(position = c("right", "bottom"), width = 0.2) +
+  tmap::tm_layout(
+    title = paste("Neighbor links within ",
+                  nn_dis / 1000, " km", sep = ""),
+    title.position = c("left", "top"),
+    title.size = 1.1,
+    title.fontface = "bold",
+    frame = FALSE,
+    inner.margins = c(0.05, 0.05, 0.05, 0.05)
+  )
 ```
 
 ## Task 19
