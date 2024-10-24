@@ -25,6 +25,8 @@ editor: visual
 
 -   kommentare in unseren worten schreiben!
 
+-   task 9 besser?
+
 -   task 10, 11, 12, 13
 
 -   für zwei verschieden aussehende jahre machen (bisher immer 18/19 oder nur 18)
@@ -212,6 +214,7 @@ osm_basemap <- opq(bbox = bbox) |>
 
 ```{r}
 zh_city_boundary <- st_read('data/Zurich_city_boundary_2024.gpkg')
+zh_city_roads <- st_read('data/Strassennetz_-OGD.gpkg')
 ```
 
 ```{r}
@@ -238,6 +241,8 @@ ggplot() +
 | Parameters: Distance from one point to another and the minimum number of accidents within the defined distance radius to form a cluster.
 
 ## Task 6:
+
+| We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN. 
 
 ### Preliminary work
 
@@ -484,8 +489,8 @@ Discuss your results, including also limitations or problems, and possible other
 ## Task 9:
 
 ```{r}
-# Let's also try OPTICS with the extractXi() function on the data
-# of restaurants.
+# OPTICS with the extractXi() function on the data
+#2018
 pt_bike18_reach <- dbscan::optics(bicycle_crd_2018, eps = 1000.0, minPts = 3)
 pt_bike18_reach <- dbscan::extractXi(pt_bike18_reach, xi = 0.05)
 # Extract reachability distances from the OPTICS object
@@ -493,9 +498,21 @@ reachdist <- pt_bike18_reach$reachdist
 
 # Plot reachability distances with specific ylim settings
 plot(reachdist, type = "l", ylim = c(0, 0.015), xlab = "Points", ylab = "Reachability Distance",
-     main = "Reachability Plot")
+     main = "Reachability Plot 2018")
  
-dbscan::hullplot(bicycle_crd_2018, pt_bike18_reach, asp = 1)
+dbscan::hullplot(bicycle_crd_2018, pt_bike18_reach, asp = 1, main = "Convex Hull Plot 2018")
+
+#2019
+pt_bike19_reach <- dbscan::optics(bicycle_crd_2019, eps = 1000.0, minPts = 3)
+pt_bike19_reach <- dbscan::extractXi(pt_bike19_reach, xi = 0.05)
+# Extract reachability distances from the OPTICS object
+reachdist <- pt_bike19_reach$reachdist
+
+# Plot reachability distances with specific ylim settings
+plot(reachdist, type = "l", ylim = c(0, 0.015), xlab = "Points", ylab = "Reachability Distance",
+     main = "Reachability Plot 2019")
+ 
+dbscan::hullplot(bicycle_crd_2019, pt_bike19_reach, asp = 1, main = "Convex Hull Plot 2019")
 ```
 
 ## Task 9 (alternative):
@@ -509,14 +526,14 @@ dbscan::hullplot(bicycle_crd_2018, pt_bike18_reach, asp = 1)
 # sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
 # above from the SF object using sf::st_coordinates().
 
-sde_crd <- phonTools::sdellipse(bicycle_crd_2018, stdev = 1, show = FALSE)
+sde_crd_18 <- phonTools::sdellipse(bicycle_crd_2018, stdev = 1, show = FALSE)
 
 ggplot() +
-  geom_polygon(aes(x = sde_crd[,1], y = sde_crd[,2]), 
+  geom_polygon(aes(x = sde_crd_18[,1], y = sde_crd_18[,2]), 
                colour = "darkgreen", fill = "lightgreen", 
                linewidth = 0.8, alpha = 0.4) +
   geom_sf(data = bicycle_accidents_2018) +
-  geom_point(aes(x = mean(bicycle_crd_2018[,1]), y = mean(sde_crd[,2])), 
+  geom_point(aes(x = mean(bicycle_crd_2018[,1]), y = mean(sde_crd_18[,2])), 
                  colour = "red", size = 3) +
   coord_sf(datum = crs_wgs84) +
   xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
@@ -532,14 +549,14 @@ ggplot() +
 # sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
 # above from the SF object using sf::st_coordinates().
 
-sde_crd <- phonTools::sdellipse(bicycle_crd_2019, stdev = 1, show = FALSE)
+sde_crd_19 <- phonTools::sdellipse(bicycle_crd_2019, stdev = 1, show = FALSE)
 
 ggplot() +
-  geom_polygon(aes(x = sde_crd[,1], y = sde_crd[,2]), 
+  geom_polygon(aes(x = sde_crd_19[,1], y = sde_crd_19[,2]), 
                colour = "darkgreen", fill = "lightgreen", 
                linewidth = 0.8, alpha = 0.4) +
   geom_sf(data = bicycle_accidents_2018) +
-  geom_point(aes(x = mean(bicycle_crd_2019[,1]), y = mean(sde_crd[,2])), 
+  geom_point(aes(x = mean(bicycle_crd_2019[,1]), y = mean(sde_crd_19[,2])), 
                  colour = "red", size = 3) +
   coord_sf(datum = crs_wgs84) +
   xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
@@ -567,8 +584,8 @@ matrix21 <- bicycle_crd_2021[1:min_length, ]
 #adehabitatHR::kerneloverlap()
 install.packages("vegan")
 library(vegan)
-df<-data.frame(matrix18, matrix19)
-vegdist(df, method = "jaccard")
+df_18_19 <-data.frame(matrix18, matrix19)
+vegdist(df_18_19, method = "jaccard")
 
 ```
 
@@ -583,7 +600,11 @@ jaccard <- function(a, b) {
 
 #Compute the similarity between the matrices of bike accidents in 2018 and 2019
 jaccard(matrix18, matrix19)
+#Compute the similarity between the delineated polygons of bike accidents in 2018 and 2019 --> maybe this is better (nr makes more sense) than matrices?? I guess for jaccard you need a polygon geometry and not points but unsure
+jaccard(pt_bike18_reach, pt_bike19_reach)
 ```
+
+| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score. 
 
 ## Task 10:
 
@@ -625,7 +646,7 @@ plot(bicycle_crd_2021,
 *Task 10: Overall, what did you find with the above steps? What do these steps tell you about the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing the given data? Any other points of note?*
 
 | The above steps and graphs show us that the largest accident herd in the city of Zurich is between the upper end of lake Zurich and Letten. On all the graphs, a large blob of points can be seen. On the standard deviational ellipse we could also see this well.
-| However, we cannot tell much about the other areas and streets around it as the point clusters don't seem like the best option to analyse such herds. This method with coloring the different clusters seems more adapt for datasets wich are to be clustered by classes. As we don't have classes here we want to distinguish but rather analyse denisties, a kernel density estimation would be of more interest.
+| However, we cannot tell much about the other areas and streets around it as the point clusters don't seem like the best option to analyse such herds. This method with coloring the different clusters seems more adapt for datasets wich are to be clustered by classes. As we don't have classes here we want to distinguish but rather analyse densities, a kernel density estimation would be of more interest.
 
 ## Task 11
 
@@ -633,9 +654,9 @@ Similarly to the clustering and polygon delineation tasks carried out in Parts 1
 
 Bandwidth selection and the kernel shape are the key criteria to define for using KDE.
 
-What else should we write here?!
+Bandwidth h will be tested with HREF, LSCV as well as HPI. It would be interesting to use a weighted bandwidth, however, we don't have a value/location kind of column (like there is in the ungulates sample data). We tried to compute this but as no two accidents seem to be at the exact (important!) coordinates, it would have involved to create some kind of a buffer, then group and weigh the accidents per coordinates group... which would have been too time consuming.
 
-...
+We work with the bivariate normal kernel, which is the standard in kernelUD{adehabitatHR} and generally a popular option.
 
 ## Task 12
 
@@ -680,9 +701,8 @@ grid_val <- 300   # 300
 
 bicycle_crds_18_sp <- as(bicycle_accidents_2018, "Spatial")
 
-# First, use the reference bandwidth method for bandwith selection (h = "href")
+# First, use the reference bandwidth method for bandwidth selection (h = "href")
 # Positioning of legend box is optimized for knitr HTML output
-
 
 # Compute UD (utilization distribution)
 ud <- adehabitatHR::kernelUD(bicycle_crds_18_sp, grid = grid_val, extent = ext_val, h = "href")
@@ -707,8 +727,9 @@ legend("topright", c("HR 50%", "HR 95%"),
        inset = c(0.19, 0.06), cex = 0.75)
 cat("Size of home range with HREF (95 %): ", hr95$area, sep = "", "\n")
 cat("Size of core area with HREF (50 %): ", hr50$area, sep = "", "\n")
+################################################################################
 
-# Now use the reference least-squares cross-validation method (h = "LSCV")
+# Now we use the reference least-squares cross-validation method (h = "LSCV")
 # Positioning of legend box is optimized for knitr HTML output
 ud <- adehabitatHR::kernelUD(bicycle_crds_18_sp, grid = grid_val, extent = ext_val, h = "LSCV")
 hr95 <- adehabitatHR::getverticeshr(ud, percent = 95)   # retrieve home range (95th volume percentile)
@@ -732,6 +753,8 @@ legend("topright", c("HR 50%", "HR 95%"), col = c("black", "blue"),
 cat("Size of home range with LSCV (95 %): ", hr95$area, sep = "", "\n")
 cat("Size of core area with LSCV (50 %): ", hr50$area, sep = "", "\n")
 ```
+
+| The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the  estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
 
 ```{r}
 #Shorten the bicycle_accidents_2018 to the same length as matrix 18 has, namely 632 rows
@@ -774,21 +797,6 @@ fkde <- ks::kde(matrix18, H = h)
 plot(fkde, display = "image",
      main = "Unweighted KDE; least-squares cross validation bandwidth (LSCV)", asp = 1)
 plot(bicycle_accidents_2018, cex = 0.5, pch = 16, col = "black", add = TRUE)
-
-
-##### This last part cannot be done as we don't have the column "value" (so nr of accidents per data point) in our table -- could be computed maybe??
-
-# Now the same with weights applied (i.e. number of animals per data point)
-#h <- ks::Hlscv(x = matrix18)   # Hlscv = least squares cross validation
-#fkde_w <- ks::kde(matrix18, H = h, w = bicycle_accidents_2018$value)
-
-# assign number of animals to tmp and normalize values
-#tmp <- bicycle_accidents_2018$value
-#tmp <- (tmp - min(tmp)) / (max(tmp) - min(tmp))
-
-#plot(fkde_w, display = "image", 
-#     main = "Weighted KDE (number of observations per point); LSCV", asp = 1)
-#plot(bicycle_accidents_2018, cex = 4*tmp, pch = 20, col = "black", add = TRUE)
 ```
 
 ```{r}
@@ -803,8 +811,12 @@ Compute the “volume of intersection” (“VI”) between the KDE surfaces (ut
 #theory:
 #https://rdrr.io/cran/adehabitatHR/man/kerneloverlap.html
 
-#kernel_18_VI <- kerneloverlap(spatial_points, method = "VI", percent = 95, conditional = FALSE)
+#kernel_18_VI <- kerneloverlap(df_18_19, method = "VI", percent = 95, conditional = FALSE)
 #plot(kernel_18_VI)
+```
+
+```{r}
+str(df_18_19)
 ```
 
 ```{r}
@@ -817,9 +829,6 @@ print(colnames(coords_matrix))
 # Now select only the relevant columns (usually labeled as X and Y) for conversion
 coords_matrix_xy <- coords_matrix[, c("X", "Y")]
 
-# Load the sp package
-library(sp)
-
 # Convert the coordinates to a SpatialPoints object
 spatial_points <- SpatialPoints(coords_matrix_xy, proj4string = CRS("+proj=longlat +datum=WGS84"))
 
@@ -827,6 +836,7 @@ head(spatial_points)
 
 # Use the SpatialPoints object in the kerneloverlap function
 #kernel_18_VI <- kerneloverlap(spatial_points, method = "VI", percent = 95, conditional = FALSE)
+#this gives always the same error and Idk why?!
 
 ```
 
@@ -834,9 +844,7 @@ head(spatial_points)
 
 Discuss your results for this part of DC1 (density estimation). What did you find? Compare the results of this part with the clusters/polygons of Parts 1 and 2 (see note below): What are the commonalities? What are the differences? Which method(s) perform more ade- quately than others for the given problem and data? Which method(s) would you recommend, and which ones not? Why? (You are free to add more points to the discussion.)
 
-```{r}
-
-```
+| bla
 
 ## Task 15
 
@@ -945,7 +953,7 @@ bicycle_severities
 ```{r}
 #get rid of the z-coordinate in the geometry
 bicycle_accidents <- st_zm(bicycle_accidents)
-coords_2d <- st_zm(st_geometry(bicycle_accidents))
+#coords_2d <- st_zm(st_geometry(bicycle_accidents))
 ```
 
 ```{r}
@@ -953,9 +961,9 @@ coords_2d <- st_zm(st_geometry(bicycle_accidents))
 #| 
 # library("spdep")
 
-# Find nearest neighbors within 20 kilometers (= 20000 m).
+# Find nearest neighbors within 2 kilometers (= 2000 m).
 # You should play with nn.dis and see what it does to connectivity.
-nn_dis <- 20000
+nn_dis <- 2000
 
 # We first call dnearneigh() with min. distance = 0 and max. distance = nn_dis.
 # This creates an nb object, that is, a list of Euclidean neighbors for each 
@@ -972,15 +980,28 @@ bicycle_accidents_lw <- spdep::nb2listw(spdep::include.self(bicycle_accidents_nb
 
 ```
 
+```{r}
+#trying the same procedure with only one year bc the nb object is way too big
+bicycle_accidents18_nb <- spdep::dnearneigh(bicycle_accidents_2018, 0, nn_dis)
+
+bicycle_accidents18_lw <- spdep::nb2listw(spdep::include.self(bicycle_accidents18_nb), style = "B")
+```
+
 --\> de folgendi chunk lauft irgendwie nie richtig dure und bim abbreche chunnt folgende Fehler: Fehler in db18_02\[, 1\] : falsche Anzahl von Dimensionen. Kei Ahnig wieso aber irgendwie schiints verchnüpft zsii oder R isch wieder am abkacke bi mir. Obe bim Task 15c chunnt de Fehler mit de Dimensione bi mir au. Check nöd wieso
+
+```{r}
+summary(bicycle_accidents18_nb)
+```
 
 ```{r}
 # Create the line links from the nb object, requesting an sf object to be returned.
 # CRS needs to be set as it was carried over to the nb object.
-bicycle_accidentss_links <-
-  spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
 
-bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
+#bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
+
+bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = sf::st_geometry(bicycle_accidents), as_sf = TRUE) |> sf::st_set_crs(crs_lv95)
+
+#bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
 
 # Plot the neighbor links using functions from the tmap package
 tmap::tm_shape(cantons_bound) + tmap::tm_borders(col = "gray") +
@@ -998,9 +1019,37 @@ tmap::tm_shape(cantons_bound) + tmap::tm_borders(col = "gray") +
   )
 ```
 
+Laura: Ich hans da mal nur mitem 2018 versuecht, wil d datemengi rieesig isch. Han statt sads_links d accident_links gno aber ka
+
+```{r}
+# Create the line links from the nb object, requesting an sf object to be returned.
+# CRS needs to be set as it was carried over to the nb object.
+
+#bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
+
+bicycle_accidents18_links <- spdep::nb2lines(bicycle_accidents18_nb, coords = sf::st_geometry(bicycle_accidents_2018), as_sf = TRUE) |> sf::st_set_crs(crs_lv95)
+
+#bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
+
+# Plot the neighbor links using functions from the tmap package
+tmap::tm_shape(zh_city_boundary) + tmap::tm_borders(col = "gray") +
+  tmap::tm_shape(bicycle_accidents18_links) + tmap::tm_lines(col = "red", lwd = 0.5) +
+  tmap::tm_shape(bicycle_accidents_2018) + tmap::tm_dots(col = "black", size = 0.1) +
+  tmap::tm_scale_bar(position = c("right", "bottom"), width = 0.2) +
+  tmap::tm_layout(
+    title = paste("Neighbor links within ",
+                  nn_dis / 1000, " km", sep = ""),
+    title.position = c("left", "top"),
+    title.size = 1.1,
+    title.fontface = "bold",
+    frame = FALSE,
+    inner.margins = c(0.05, 0.05, 0.05, 0.05)
+  )
+```
+
 ## Task 19
 
-Discuss your results. What did you find regarding the hot and cold spots in your acci- dent count layers? How do they compare to each other across layers and across (past) methods? etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial weight formation) on your results.
+Discuss your results. What did you find regarding the hot and cold spots in your accident count layers? How do they compare to each other across layers and across (past) methods? etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial weight formation) on your results.
 
 | blabla
 | 
