@@ -1,23 +1,19 @@
----
-title: "DC1_Part1"
-author: "Laura Bozzi and Sarina Sägesser"
-format: html
-editor: visual
----
+-   <div>
+
+    ---
+    title: "DC1_Part1"
+    author: "Laura Bozzi and Sarina Sägesser"
+    format: html
+    editor: visual
+    ---
+
+    </div>
 
 # DC1 Assignment, Part 1 (Spatial Clustering)
 
 ## Fragen an Röbi/Peter:
 
--   gehören fragen in dcs schon zum essay teil und müssen separat geschrieben werden oder zsm gut?
-
--   wieviel muss geschrieben werden? eher task - paragraph oder seitenweise?
-
--   bis wann werden neue parts des DC1 eingeführt? (neue aufgaben)
-
--   kurzes feedback zu unserem zwischenstand? in etwa was sie sich vorgestellt haben??
-
--   **criteria for using KDE:** was ist gemeint? (evtl im buch –\> sind einfach kernel shape und bandwidth, nicht mehr)
+-   wieviel muss geschrieben werden? siehe benedikt :-)
 
 ## Notizen für uns
 
@@ -242,7 +238,7 @@ ggplot() +
 
 ## Task 6:
 
-| We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN. 
+| We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN.
 
 ### Preliminary work
 
@@ -604,7 +600,7 @@ jaccard(matrix18, matrix19)
 jaccard(pt_bike18_reach, pt_bike19_reach)
 ```
 
-| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score. 
+| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score.
 
 ## Task 10:
 
@@ -754,7 +750,7 @@ cat("Size of home range with LSCV (95 %): ", hr95$area, sep = "", "\n")
 cat("Size of core area with LSCV (50 %): ", hr50$area, sep = "", "\n")
 ```
 
-| The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the  estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
+| The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
 
 ```{r}
 #Shorten the bicycle_accidents_2018 to the same length as matrix 18 has, namely 632 rows
@@ -927,7 +923,7 @@ plot(bicycle_crd_kcross, main = "Cross-K-function for all bicycle accidents poin
 
 ## Task 17
 
-Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.
+*Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.*
 
 ```{r}
 
@@ -935,7 +931,26 @@ Discuss your results. Similarities and differences between the various point set
 
 ## Task 18
 
-From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, compute the counts within the ‘statistical zones’ of Zurich and use these counts to compute the Getis-Ord G\*-statistic for each of your counts layers. Visualize your results appropriately.
+*From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, compute the counts within the ‘statistical zones’ of Zurich and use these counts to compute the Getis-Ord G\*-statistic for each of your counts layers. Visualize your results appropriately.*
+
+**newversion try:**
+
+```{r}
+stat_zones <- st_read('data/zh_stat_zones.gpkg')
+all_accidents_gpkg <- st_read("data/roadtrafficaccidentlocations.gpkg")
+bicycle_accidents_gpkg <- all_accidents_gpkg |>
+  filter(AccidentInvolvingBicycle == "true")
+```
+
+```{r}
+bike_acc_stat_zones <- st_join(bicycle_accidents_gpkg, stat_zones)
+```
+
+```{r}
+
+```
+
+**oldversion**
 
 --\> ich nimme mal 2 accident types, mer chönds ja nachher au ändere wenn öppis anders schlauer erschiint.
 
