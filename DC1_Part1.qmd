@@ -61,8 +61,10 @@ crs_wgs84 <- 4326
 
 ## Task 1:
 
+Download and import the road accident data from Open Data Zurich (ODZ) using an appropriate file format. If needed, transform to the Swiss projected CH1903+/LV95 coordinate system (EPSG = 2056).
+
 ```{r}
-accidents <- st_read("roadtrafficaccidentlocations.json", crs = 4326)
+accidents <- st_read("roadtrafficaccidentlocations.gpkg")
 #head(accidents)
 ```
 
@@ -71,6 +73,8 @@ plot(accidents)
 ```
 
 ## Task 2:
+
+Report the following numbers in table(s): a. Number of accidents by accident severity category b. Number of accidents by accident type c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively. And combinations thereof (pedestrian AND bicycle, pedestrian AND motorcycle etc.). Are there any accidents involving all three modes (pedestrian, bicycle, motorcycle)?
 
 ```{r}
 #a. Number of accidents by accident severity category 
@@ -153,6 +157,8 @@ There seem to be no accidents where all three involvements (bike, motorcycle and
 
 ## Task 3:
 
+Generate a plot showing the temporal evolution of the number of accidents from 2011 to 2023. Label each year with the corresponding number of accidents. Choose a plot type that is suitable for this type of temporal data. Bonus: Show also the data for the bicycle accidents (cf. Task 4) in the same plot.
+
 ```{r}
 #accidents per year
 accident_per_year <- accidents |>
@@ -200,16 +206,19 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
 
 ## Task 4:
 
+Select only those accidents that involved a bicycle. From now on, and for the remainder of DC1, we will restrict our analysis to the accidents involving bicycles. With this subset, produce a map showing the bicycle accident data colored by accident severity category. Use a basemap such as OpenStreetMap and/or the boundary data available on OLAT, so the accidents can be visually and spatially referenced.
+
 ```{r}
+library(httr2)
 bicycle_accidents <- accidents |>
   filter(AccidentInvolvingBicycle == "true")
 
 bbox <- st_bbox(bicycle_accidents)
 
-osm_basemap <- opq(bbox = bbox) |>
-  add_osm_feature(key="boundary", value = "administrative") %>%
-  add_osm_feature(key="admin_level", value = "8") %>%
-  osmdata_sf()
+# osm_basemap <- opq(bbox = bbox) |>
+#   add_osm_feature(key="boundary", value = "administrative") %>%
+#   add_osm_feature(key="admin_level", value = "8") %>%
+#   osmdata_sf()
 ```
 
 ```{r}
@@ -231,9 +240,7 @@ ggplot() +
 
 ## Task 5:
 
-```{r}
-#Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.
-```
+Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.
 
 | We would be interested in knowing in what areas of Zurich the most bicycle accidents happen. On the generated map of all bicycle accident one can see that in the city center, close to the main train station there are many accidents. Such accident herds could therefore be detected with more security with a spatial density clustering.
 | The accidents should occur within close proximity to one another, which indicates a spatial dependence. A threshold for maximum distance between accidents would be used in this case, as well as the minimum number of points within a cluster.
@@ -242,12 +249,18 @@ ggplot() +
 
 ## Task 6:
 
-| We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN. 
+From the bicycle accidents, extract the years 2018 to 2021 and compute clusters for each year separately, using a clustering method you deem appropriate for the task, and choose the control parameters appropriately to capture the types of clusters you had in mind in your definition of Task 5. Justify your choice.
+
+| We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN.
 
 ### Preliminary work
 
 ```{r}
-bicycle_crd <- sf::st_coordinates(bicycle_accidents)
+bicycle_crd <- bicycle_accidents[, c("AccidentLocation_CHLV95_N", "AccidentLocation_CHLV95_E")]
+```
+
+```{r}
+#bicycle_crd <- sf::st_coordinates(bicycle_accidents)
 ```
 
 ```{r}
@@ -474,6 +487,8 @@ Discuss your results, including also limitations or problems, and possible other
 
 ## Task 8:
 
+Given the clusters that you have extracted in Part 1 of the DC1 assignment: a. Define a set of criteria that a method should fulfill that can be used to delineate the given clusters by polygons. Use free text for these definitions, but try to be concise and precise. (Note: These criteria can also be used in the subsequent Discussion to evaluate whether they have been met.) b. Choose a polygon delineation method that you deem appropriate in light of the above criteria. Justify your choice.
+
 ### 8a)
 
 | The method should be able to detect an area which is very dense in bicycle accidents. It should work kind of like a heat map, where we see a center where many accidents happen on the same spot and towards the edges there are less and less. Therefore, the polygon should be drawn at the border between "many accidents and less accidents".
@@ -487,6 +502,8 @@ Discuss your results, including also limitations or problems, and possible other
 | 
 
 ## Task 9:
+
+From the years 2018 to 2021 for which you computed clusters in Task 6, choose at least two years and apply your polygon delineation method of choice to each of these two years separately. Compute the Jaccard Index (aka Intersection over Union) for pair(s) of selected years and present and discuss the results.
 
 ```{r}
 # OPTICS with the extractXi() function on the data
@@ -604,9 +621,11 @@ jaccard(matrix18, matrix19)
 jaccard(pt_bike18_reach, pt_bike19_reach)
 ```
 
-| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score. 
+| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score.
 
 ## Task 10:
+
+Overall, what did you find with the above steps? What do these steps tell you about the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing the given data? Any other points of note?
 
 Trying to plot four graphs next to each other
 
@@ -754,7 +773,7 @@ cat("Size of home range with LSCV (95 %): ", hr95$area, sep = "", "\n")
 cat("Size of core area with LSCV (50 %): ", hr50$area, sep = "", "\n")
 ```
 
-| The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the  estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
+| The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
 
 ```{r}
 #Shorten the bicycle_accidents_2018 to the same length as matrix 18 has, namely 632 rows
@@ -853,15 +872,24 @@ Choose one or more distance measure functions (justify your choice) and compute 
 ### a)
 
 ```{r}
+
+```
+
+```{r}
+X_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_E)
+Y_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_N)
+
 win_all <- as.owin(st_bbox(bicycle_accidents))
-bicycle_crd_ppp <- spatstat.geom::ppp(x = bicycle_crd[,1], y = bicycle_crd[,2], window = win_all, unitname = c("meter", "meters"))
+bicycle_crd_ppp <- spatstat.geom::ppp(x = X_crd, y = Y_crd, window = win_all, unitname = c("meter", "meters"))
+
+summary(bicycle_crd_ppp)
 
 # Compute K-function using Kest(), with edge correction.
-bicycle_crd_kf <- spatstat.explore::Kest(bicycle_crd_ppp, correction = "Ripley")
+bicycle_crd_gf <- spatstat.explore::envelope(bicycle_crd_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(bicycle_crd_kf, main = "K-function for all bicycle accidents points")
+plot(bicycle_crd_gf, main = "G-function for all bicycle accidents points")
 ```
 
 ### b)
@@ -875,25 +903,29 @@ bicycle_crd18_ppp <- spatstat.geom::ppp(x = bicycle_crd_2018[,1], y = bicycle_cr
 #| label: K-fun
 #| 
 # Compute K-function using Kest(), with edge correction.
-bicycle_crd18_kf <- spatstat.explore::Kest(bicycle_crd18_ppp, correction = "Ripley")
+bicycle_crd18_gf <- spatstat.explore::envelope(bicycle_crd18_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(bicycle_crd18_kf, main = "K-function for bicycle accidents 2018 points")
+plot(bicycle_crd18_gf, main = "G-function for bicycle accidents 2018 points")
 ```
 
 ### c)
+
+```{r}
+
+```
 
 ```{r}
 #not working yet - db18_02 has sf format and needs to be a matrix (maybe using normal crds 18 works?)
 db18_02_ppp <- spatstat.geom::ppp(x = db18_02[,1], y = db18_02[,2], window = win, unitname = c("meter", "meters"))
 
 # Compute K-function using Kest(), with edge correction.
-db18_02_kf <- spatstat.explore::Kest(db18_02_ppp, correction = "Ripley")
+db18_02_gf <- spatstat.explore::envelope(db18_02_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(db18_02_kf, main = "K-function for bicycle accidents 2018 points")
+plot(db18_02_gf, main = "G-function for bicycle accidents 2018 points")
 ```
 
 ## Task 16
@@ -908,21 +940,21 @@ bicycle_marks_ppp <- spatstat.geom::setmarks(bicycle_crd_ppp, factor(bicycle_acc
 ```{r}
 #Cross-K-function 2018 and 2019
 # Compute K-function using Kest(), with edge correction.
-bicycle_crd_kcross <- spatstat.explore::Kcross(bicycle_marks_ppp,i = "2018", j = "2019", correction = "Ripley")
+bicycle_crd_kcross <- spatstat.explore::Gcross(bicycle_marks_ppp,i = "2018", j = "2019")
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(bicycle_crd_kcross, main = "Cross-K-function for all bicycle accidents points 2018 and 2019")
+plot(bicycle_crd_kcross, main = "Cross--function for all bicycle accidents points 2018 and 2019")
 ```
 
 ```{r}
 #Cross-K-function
 # Compute K-function using Kest(), with edge correction.
-bicycle_crd_kcross <- spatstat.explore::Kcross(bicycle_marks_ppp,i = "2018", j = "2021", correction = "Ripley")
+bicycle_crd_kcross <- spatstat.explore::Gcross(bicycle_marks_ppp,i = "2018", j = "2021")
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(bicycle_crd_kcross, main = "Cross-K-function for all bicycle accidents points 2018 and 2021")
+plot(bicycle_crd_kcross, main = "Cross-G-function for all bicycle accidents points 2018 and 2021")
 ```
 
 ## Task 17
