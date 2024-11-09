@@ -204,7 +204,7 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
   theme_minimal()
 ```
 
-## Task 4: Laura ist schön
+## Task 4:
 
 Select only those accidents that involved a bicycle. From now on, and for the remainder of DC1, we will restrict our analysis to the accidents involving bicycles. With this subset, produce a map showing the bicycle accident data colored by accident severity category. Use a basemap such as OpenStreetMap and/or the boundary data available on OLAT, so the accidents can be visually and spatially referenced.
 
