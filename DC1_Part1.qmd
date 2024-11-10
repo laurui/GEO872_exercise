@@ -1089,6 +1089,7 @@ quart_sf$g_star_severe <- g_star_severe
 
 ```{r}
 check_pkg("spdep")
+<<<<<<< HEAD
 
 # Plot Getis-Ord G* statistic for light accidents
 tm_shape(quart_sf) +
@@ -1103,3 +1104,19 @@ tm_shape(quart_sf) +
   tm_layout(main.title = "Getis-Ord G* for Severe Bike Accidents", title.position = c("left", "top"))
 
 ```
+=======
+
+# Plot Getis-Ord G* statistic for light accidents
+tm_shape(quart_sf) +
+  tm_borders() +
+  tm_fill(col = "g_star_light", palette = "RdBu", style = "cont") +
+  tm_layout(main.title = "Getis-Ord G* for Light Bike Accidents", title.position = c("left", "top"))
+
+# Plot Getis-Ord G* statistic for severe bicycle accidents
+tm_shape(quart_sf) +
+  tm_borders() +
+  tm_fill(col = "g_star_severe", palette = "RdBu", style = "cont") +
+  tm_layout(main.title = "Getis-Ord G* for Severe Bike Accidents", title.position = c("left", "top"))
+
+```
+>>>>>>> 24df1e705f03c59f35dd3df499c306752bd537dc
