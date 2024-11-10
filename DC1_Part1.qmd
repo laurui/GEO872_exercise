@@ -61,11 +61,21 @@ crs_wgs84 <- 4326
 
 ## Task 1:
 
-Download and import the road accident data from Open Data Zurich (ODZ) using an appropriate file format. If needed, transform to the Swiss projected CH1903+/LV95 coordinate system (EPSG = 2056).
+*Download and import the road accident data from Open Data Zurich (ODZ) using an appropriate file format. If needed, transform to the Swiss projected CH1903+/LV95 coordinate system (EPSG = 2056).*
 
 ```{r}
 accidents <- st_read("roadtrafficaccidentlocations.gpkg")
 #head(accidents)
+```
+
+As the point dimension seems to have a Z coordinate, which is always 0, we remove it here already.
+
+```{r}
+# Remove the Z coordinate from the geometry column
+accidents <- sf::st_zm(accidents)
+
+# Check if the Z coordinate has been successfully removed
+print(accidents)
 ```
 
 ```{r}
@@ -74,7 +84,9 @@ plot(accidents)
 
 ## Task 2:
 
-Report the following numbers in table(s): a. Number of accidents by accident severity category b. Number of accidents by accident type c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively. And combinations thereof (pedestrian AND bicycle, pedestrian AND motorcycle etc.). Are there any accidents involving all three modes (pedestrian, bicycle, motorcycle)?
+*Report the following numbers in table(s):*
+
+*a. Number of accidents by accident severity category*
 
 ```{r}
 #a. Number of accidents by accident severity category 
@@ -85,6 +97,8 @@ accident_severity <- accidents |>
 accident_severity
 ```
 
+*b. Number of accidents by accident type*
+
 ```{r}
 #b. Number of accidents by accident type 
 accident_type <- accidents |>   
@@ -94,15 +108,16 @@ accident_type <- accidents |>
 accident_type
 ```
 
+*c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively. And combinations thereof (pedestrian AND bicycle, pedestrian AND motorcycle etc.). Are there any accidents involving all three modes (pedestrian, bicycle, motorcycle)?*
+
 ```{r}
 #c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
 
-# Still need to add the combinations of pedestrians, bicycles, and motorcycles
 selected_involvements <- accidents |>   
-  select(AccidentInvolvingPedestrian, AccidentInvolvingBicycle, AccidentInvolvingMotorcycle)  
+  dplyr::select(AccidentInvolvingPedestrian, AccidentInvolvingBicycle, AccidentInvolvingMotorcycle)  
 
 accident_involvements <- selected_involvements |>   
-  summarise(across(everything(), ~ sum(. == "true", na.rm = "true"))) %>%   
+  dplyr::summarise(across(everything(), ~ sum(. == "true", na.rm = "true"))) %>%   
   bind_rows(selected_involvements %>%               
               summarise(across(everything(), ~ sum(. == "false", na.rm = "true"))))|>  
   st_drop_geometry()  
@@ -157,7 +172,7 @@ There seem to be no accidents where all three involvements (bike, motorcycle and
 
 ## Task 3:
 
-Generate a plot showing the temporal evolution of the number of accidents from 2011 to 2023. Label each year with the corresponding number of accidents. Choose a plot type that is suitable for this type of temporal data. Bonus: Show also the data for the bicycle accidents (cf. Task 4) in the same plot.
+*Generate a plot showing the temporal evolution of the number of accidents from 2011 to 2023. Label each year with the corresponding number of accidents. Choose a plot type that is suitable for this type of temporal data. Bonus: Show also the data for the bicycle accidents (cf. Task 4) in the same plot.*
 
 ```{r}
 #accidents per year
@@ -183,8 +198,8 @@ total_plus_bicycle_per_year
 ```
 
 ```{r}
-ggplot(accident_per_year, aes(x = accident_per_year$AccidentYear, y= accident_per_year$count_total))+
-  geom_line(color = "steelblue", size = 1) +         
+ggplot(accident_per_year, aes(x = AccidentYear, y= count_total))+
+  geom_line(color = "steelblue", linewidth = 1) +         
   geom_point(color = "steelblue", size = 2) +         
   labs(title = "Temporal Evolution of Accidents from 2011 to 2023",
        x = "Year",
@@ -206,7 +221,7 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
 
 ## Task 4:
 
-Select only those accidents that involved a bicycle. From now on, and for the remainder of DC1, we will restrict our analysis to the accidents involving bicycles. With this subset, produce a map showing the bicycle accident data colored by accident severity category. Use a basemap such as OpenStreetMap and/or the boundary data available on OLAT, so the accidents can be visually and spatially referenced.
+*Select only those accidents that involved a bicycle. From now on, and for the remainder of DC1, we will restrict our analysis to the accidents involving bicycles. With this subset, produce a map showing the bicycle accident data colored by accident severity category. Use a basemap such as OpenStreetMap and/or the boundary data available on OLAT, so the accidents can be visually and spatially referenced.*
 
 ```{r}
 library(httr2)
@@ -230,7 +245,7 @@ zh_city_roads <- st_read('data/Strassennetz_-OGD.gpkg')
 ggplot() +
   geom_sf(data = zh_city_boundary) +
   #geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
-  geom_sf(data = bicycle_accidents, aes(color = bicycle_accidents$AccidentSeverityCategory_en), size = 1.5, alpha = 0.8) +
+  geom_sf(data = bicycle_accidents, aes(color = AccidentSeverityCategory_en), size = 1.5, alpha = 0.8) +
   labs(title = "Accidents on OpenStreetMap Basemap",
        subtitle = "Accidents plotted over streets from OSM",
        color = "Accident Severity") +
@@ -240,7 +255,7 @@ ggplot() +
 
 ## Task 5:
 
-Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.
+*Imagine you are given the task of detecting spatial clusters of elevated bicycle accident occurrence (without considering their severity). How would you characterize such “bicycle accident clusters”? Try to define properties that can be used to describe and identify such clusters, and that can be used to choose and parameterize a clustering method suitable for the task. Try to use natural, but precise and concise language in your answer.*
 
 | We would be interested in knowing in what areas of Zurich the most bicycle accidents happen. On the generated map of all bicycle accident one can see that in the city center, close to the main train station there are many accidents. Such accident herds could therefore be detected with more security with a spatial density clustering.
 | The accidents should occur within close proximity to one another, which indicates a spatial dependence. A threshold for maximum distance between accidents would be used in this case, as well as the minimum number of points within a cluster.
@@ -278,18 +293,14 @@ bicycle_accidents_2021 <- bicycle_accidents |>
 ```
 
 ```{r}
-#keep only X and Y coordinates for the further analysis, remove Z because it's 0 anyway
-bicycle_crd_2018 <- sf::st_coordinates(bicycle_accidents_2018)
-bicycle_crd_2018 <- bicycle_crd_2018[, !(colnames(bicycle_crd_2018) %in% "Z")]
+#keep only X and Y coordinates for the further analysis
+bicycle_crd_2018 <- sf::st_coordinates(bicycle_accidents_2018) 
 
-bicycle_crd_2019 <- sf::st_coordinates(bicycle_accidents_2019)
-bicycle_crd_2019 <- bicycle_crd_2019[, !(colnames(bicycle_crd_2019) %in% "Z")]
+bicycle_crd_2019 <- sf::st_coordinates(bicycle_accidents_2019) 
 
-bicycle_crd_2020 <- sf::st_coordinates(bicycle_accidents_2020)
-bicycle_crd_2020 <- bicycle_crd_2020[, !(colnames(bicycle_crd_2020) %in% "Z")]
+bicycle_crd_2020 <- sf::st_coordinates(bicycle_accidents_2020) 
 
 bicycle_crd_2021 <- sf::st_coordinates(bicycle_accidents_2021)
-bicycle_crd_2021 <- bicycle_crd_2021[, !(colnames(bicycle_crd_2021) %in% "Z")]
 ```
 
 ```{r}
@@ -689,19 +700,17 @@ if(!"ks" %in% rownames(installed.packages())) install.packages("ks")
 library(ks)
 ```
 
-```{r}
-# As the conversion from sf objects to sp needs a geometry column like POINT (X Y), so without the Z, we have to remove it
-# Remove the Z coordinate from the geometry column
-bicycle_accidents_2018 <- sf::st_zm(bicycle_accidents_2018)
+As the conversion from sf objects to sp needs a geometry column like POINT (X Y), so without the Z, we have to remove it
 
-# Check if the Z coordinate has been successfully removed
+Remove the Z coordinate from the geometry column
+
+bicycle_accidents_2018 \<- sf::st_zm(bicycle_accidents_2018)
+
+Check if the Z coordinate has been successfully removed
+
 print(bicycle_accidents_2018)
 
-bicycle_accidents_2019 <- sf::st_zm(bicycle_accidents_2019)
-bicycle_accidents_2020 <- sf::st_zm(bicycle_accidents_2020)
-bicycle_accidents_2021 <- sf::st_zm(bicycle_accidents_2021)
-
-```
+bicycle_accidents_2019 \<- sf::st_zm(bicycle_accidents_2019) bicycle_accidents_2020 \<- sf::st_zm(bicycle_accidents_2020) bicycle_accidents_2021 \<- sf::st_zm(bicycle_accidents_2021)
 
 ```{r}
 #| label: kde-adehabitatHR
