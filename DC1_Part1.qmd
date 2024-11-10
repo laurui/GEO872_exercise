@@ -877,10 +877,6 @@ head(spatial_points)
 ### a)
 
 ```{r}
-
-```
-
-```{r}
 X_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_E)
 Y_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_N)
 
@@ -889,7 +885,7 @@ bicycle_crd_ppp <- spatstat.geom::ppp(x = X_crd, y = Y_crd, window = win_all, un
 
 summary(bicycle_crd_ppp)
 
-# Compute K-function using Kest(), with edge correction.
+# Compute G-function using Kest(), with edge correction.
 bicycle_crd_gf <- spatstat.explore::envelope(bicycle_crd_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
@@ -905,9 +901,9 @@ bicycle_crd18_ppp <- spatstat.geom::ppp(x = bicycle_crd_2018[,1], y = bicycle_cr
 ```
 
 ```{r}
-#| label: K-fun
+#| label: G-fun
 #| 
-# Compute K-function using Kest(), with edge correction.
+# Compute G-function using Kest(), with edge correction.
 bicycle_crd18_gf <- spatstat.explore::envelope(bicycle_crd18_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
@@ -918,19 +914,25 @@ plot(bicycle_crd18_gf, main = "G-function for bicycle accidents 2018 points")
 ### c)
 
 ```{r}
+# connect the district with the bicycle_accidents
+inner_city <- zh_city_districts |>
+  filter(KNR == "1" )
 
+inner_city_p <- st_join(bicycle_accidents_2018, inner_city)
+inner_city_p <- na.omit(inner_city_p)
+inner_city_p_xy <- as.data.frame(st_coordinates(inner_city_p))
 ```
 
 ```{r}
-#not working yet - db18_02 has sf format and needs to be a matrix (maybe using normal crds 18 works?)
-db18_02_ppp <- spatstat.geom::ppp(x = db18_02[,1], y = db18_02[,2], window = win, unitname = c("meter", "meters"))
+win <- as.owin(st_bbox(inner_city_p))
+inner_18_ppp <- spatstat.geom::ppp(x = inner_city_p_xy$X, y = inner_city_p_xy$Y, window = win, unitname = c("meter", "meters"))
 
-# Compute K-function using Kest(), with edge correction.
-db18_02_gf <- spatstat.explore::envelope(db18_02_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
+# Compute G-function using Gest(), with edge correction.
+inner_18_ppp_gf <- spatstat.explore::envelope(inner_18_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(db18_02_gf, main = "G-function for bicycle accidents 2018 points")
+plot(inner_18_ppp_gf, main = "G-function for inner city accidents in 2018")
 ```
 
 ## Task 16
@@ -1089,8 +1091,6 @@ quart_sf$g_star_severe <- g_star_severe
 
 ```{r}
 check_pkg("spdep")
-<<<<<<< HEAD
-
 # Plot Getis-Ord G* statistic for light accidents
 tm_shape(quart_sf) +
   tm_borders() +
@@ -1104,19 +1104,6 @@ tm_shape(quart_sf) +
   tm_layout(main.title = "Getis-Ord G* for Severe Bike Accidents", title.position = c("left", "top"))
 
 ```
-=======
 
-# Plot Getis-Ord G* statistic for light accidents
-tm_shape(quart_sf) +
-  tm_borders() +
-  tm_fill(col = "g_star_light", palette = "RdBu", style = "cont") +
-  tm_layout(main.title = "Getis-Ord G* for Light Bike Accidents", title.position = c("left", "top"))
-
-# Plot Getis-Ord G* statistic for severe bicycle accidents
-tm_shape(quart_sf) +
-  tm_borders() +
-  tm_fill(col = "g_star_severe", palette = "RdBu", style = "cont") +
-  tm_layout(main.title = "Getis-Ord G* for Severe Bike Accidents", title.position = c("left", "top"))
 
 ```
->>>>>>> 24df1e705f03c59f35dd3df499c306752bd537dc
