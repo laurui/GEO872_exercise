@@ -66,6 +66,8 @@ Download and import the road accident data from Open Data Zurich (ODZ) using an 
 ```{r}
 accidents <- st_read("roadtrafficaccidentlocations.gpkg")
 #head(accidents)
+
+districts <- st_read("Zurich_city_districts_2024.gpkg")
 ```
 
 ```{r}
@@ -306,32 +308,32 @@ fviz_nbclust(bicycle_crd_2021, kmeans, method = "silhouette")
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2018, k = 3)
 
-# We can somehow see a knee at about 0.009 km.
-abline(h = 0.009, col = "red")
+# We can somehow see a knee at about 900.
+abline(h = 900, col = "red")
 
 # So, let's also try 0.005 km.
-graphics::abline(h = 0.004, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.009, minPts = 3)
+db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 900, minPts = 3)
 db18_01
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.009 km",
+     main = "DBSCAN result with eps = 900",
      asp = 1)
 
-db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.004, minPts = 3)
+db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 400, minPts = 3)
 db18_02
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.004 km",
+     main = "DBSCAN result with eps = 400",
      asp = 1)
 
-db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.002, minPts = 3)
+db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 200, minPts = 3)
 db18_03
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
+     main = "DBSCAN result with eps = 200",
      asp = 1)
 ```
 
@@ -344,32 +346,32 @@ plot(bicycle_crd_2018,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2019, k = 3)
 
-# We can somehow see a knee at about 0.014 km.
-abline(h = 0.01, col = "red")
+# We can somehow see a knee at about 900.
+abline(h = 900, col = "red")
 
 # So, let's also try  0.005 km.
-graphics::abline(h = 0.004, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.01, minPts = 3)
+db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 900, minPts = 3)
 db19_01
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.01 km",
+     main = "DBSCAN result with eps = 900",
      asp = 1)
 
-db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.004, minPts = 3)
+db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 400, minPts = 3)
 db19_02
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.004 km",
+     main = "DBSCAN result with eps = 400",
      asp = 1)
 
-db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.002, minPts = 3)
+db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 200, minPts = 3)
 db19_03
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
+     main = "DBSCAN result with eps = 200",
      asp = 1)
 ```
 
@@ -382,32 +384,32 @@ plot(bicycle_crd_2019,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2020, k = 3)
 
-# We can somehow see a knee at about 0.014 km.
-abline(h = 0.014, col = "red")
+# We can somehow see a knee at about 900.
+abline(h = 900, col = "red")
 
-# So, let's also try  0.005 km.
-graphics::abline(h = 0.005, col = "blue")
+# So, let's also try  400.
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.014, minPts = 3)
+db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 900, minPts = 3)
 db20_01
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.014 km",
+     main = "DBSCAN result with eps = 900",
      asp = 1)
 
-db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.005, minPts = 3)
+db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 400, minPts = 3)
 db20_02
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.005 km",
+     main = "DBSCAN result with eps = 400",
      asp = 1)
 
-db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.0025, minPts = 3)
+db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 200, minPts = 3)
 db20_03
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.0025 km",
+     main = "DBSCAN result with eps = 200",
      asp = 1)
 ```
 
@@ -420,32 +422,32 @@ plot(bicycle_crd_2020,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2021, k = 3)
 
-# We can somehow see a knee at about 0.012 km.
-abline(h = 0.012, col = "red")
+# We can somehow see a knee at about 900.
+abline(h = 900, col = "red")
 
-# So, let's also try  0.004 km.
-graphics::abline(h = 0.004, col = "blue")
+# So, let's also try  400.
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.012, minPts = 3)
+db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 900, minPts = 3)
 db21_01
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.012 km",
+     main = "DBSCAN result with eps = 900",
      asp = 1)
 
-db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.003, minPts = 3)
+db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 400, minPts = 3)
 db21_02
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.003 km",
+     main = "DBSCAN result with eps = 400",
      asp = 1)
 
-db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.002, minPts = 3)
+db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 200, minPts = 3)
 db21_03
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
+     main = "DBSCAN result with eps = 200",
      asp = 1)
 ```
 
@@ -639,25 +641,25 @@ par(mfrow = c(2, 2),
 # Plot for the year 2018
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_03$cluster + 1,
-     main = "DBSCAN result eps = 0.002 km (2018)",
+     main = "DBSCAN result eps = 200 (2018)",
      asp = 1)
 
 # Plot for the year 2019
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_03$cluster + 1,
-     main = "DBSCAN result eps = 0.002 km (2019)",
+     main = "DBSCAN result eps = 200 (2019)",
      asp = 1)
 
 # Plot for the year 2020
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_03$cluster + 1,
-     main = "DBSCAN result eps = 0.0025 km (2020)",
+     main = "DBSCAN result eps = 200 (2020)",
      asp = 1)
 
 # Plot for the year 2021
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_03$cluster + 1,
-     main = "DBSCAN result eps = 0.002 km (2021)",
+     main = "DBSCAN result eps = 200 (2021)",
      asp = 1)
 
 ```
@@ -884,7 +886,7 @@ bicycle_crd_ppp <- spatstat.geom::ppp(x = X_crd, y = Y_crd, window = win_all, un
 
 summary(bicycle_crd_ppp)
 
-# Compute K-function using Kest(), with edge correction.
+# Compute G-function using Gest(), with edge correction.
 bicycle_crd_gf <- spatstat.explore::envelope(bicycle_crd_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
@@ -895,14 +897,16 @@ plot(bicycle_crd_gf, main = "G-function for all bicycle accidents points")
 ### b)
 
 ```{r}
+X_crd_18 <- as.numeric(bicycle_accidents_2018$AccidentLocation_CHLV95_E)
+Y_crd_18 <- as.numeric(bicycle_accidents_2018$AccidentLocation_CHLV95_N)
 win <- as.owin(st_bbox(bicycle_accidents_2018))
-bicycle_crd18_ppp <- spatstat.geom::ppp(x = bicycle_crd_2018[,1], y = bicycle_crd_2018[,2], window = win, unitname = c("meter", "meters"))
+bicycle_crd18_ppp <- spatstat.geom::ppp(x = X_crd_18, y = Y_crd_18, window = win, unitname = c("meter", "meters"))
 ```
 
 ```{r}
-#| label: K-fun
+#| label: G-fun
 #| 
-# Compute K-function using Kest(), with edge correction.
+# Compute G-function using Gest(), with edge correction.
 bicycle_crd18_gf <- spatstat.explore::envelope(bicycle_crd18_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
@@ -913,19 +917,25 @@ plot(bicycle_crd18_gf, main = "G-function for bicycle accidents 2018 points")
 ### c)
 
 ```{r}
+# connect the district with the bicycle_accidents
+inner_city <- districts |>
+  filter(KNR == "1" )
 
+inner_city_p <- st_join(bicycle_accidents_2018, inner_city)
+inner_city_p <- na.omit(inner_city_p)
+inner_city_p_xy <- as.data.frame(st_coordinates(inner_city_p))
 ```
 
 ```{r}
-#not working yet - db18_02 has sf format and needs to be a matrix (maybe using normal crds 18 works?)
-db18_02_ppp <- spatstat.geom::ppp(x = db18_02[,1], y = db18_02[,2], window = win, unitname = c("meter", "meters"))
+win <- as.owin(st_bbox(inner_city_p))
+inner_18_ppp <- spatstat.geom::ppp(x = inner_city_p_xy$X, y = inner_city_p_xy$Y, window = win, unitname = c("meter", "meters"))
 
-# Compute K-function using Kest(), with edge correction.
-db18_02_gf <- spatstat.explore::envelope(db18_02_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
+# Compute G-function using Gest(), with edge correction.
+inner_18_ppp_gf <- spatstat.explore::envelope(inner_18_ppp, fun = Gest, nsim = 100, correction = "best", verbose = FALSE)
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(db18_02_gf, main = "G-function for bicycle accidents 2018 points")
+plot(inner_18_ppp_gf, main = "G-function for inner city accidents in 2018")
 ```
 
 ## Task 16
@@ -938,18 +948,18 @@ bicycle_marks_ppp <- spatstat.geom::setmarks(bicycle_crd_ppp, factor(bicycle_acc
 ```
 
 ```{r}
-#Cross-K-function 2018 and 2019
-# Compute K-function using Kest(), with edge correction.
+# Cross-G-function 2018 and 2019
+# Compute G-function using Kest(), with edge correction.
 bicycle_crd_kcross <- spatstat.explore::Gcross(bicycle_marks_ppp,i = "2018", j = "2019")
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
 # that overwrites the basic plot() function and specializes it.
-plot(bicycle_crd_kcross, main = "Cross--function for all bicycle accidents points 2018 and 2019")
+plot(bicycle_crd_kcross, main = "Cross-G-function for all bicycle accidents points 2018 and 2019")
 ```
 
 ```{r}
-#Cross-K-function
-# Compute K-function using Kest(), with edge correction.
+# Cross-G-function 2018 and 2019
+# Compute G-function using Kest(), with edge correction.
 bicycle_crd_kcross <- spatstat.explore::Gcross(bicycle_marks_ppp,i = "2018", j = "2021")
 
 # When plotting the result of K-, L-, G-functions, spatstat uses an S3 method plot.fv()
