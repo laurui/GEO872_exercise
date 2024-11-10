@@ -33,24 +33,38 @@ editor: visual
 
 -   12: 95% sachen anpassen & verstehen was anpassen, sodass gut ausschaut
 
+alter package block:
+
+library(readr) library(tidyverse) library(tidyr) library(sf) library(dplyr) library(ggplot2) library(osmdata) library(phonTools) library(spdep)
+
+if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan") library(dbscan) if(!"factoextra" %in% rownames(installed.packages())) install.packages("dbscan") library(factoextra) if(!"spatstat" %in% rownames(installed.packages())) install.packages("dbscan") library(spatstat)
+
 ```{r}
-library(readr) 
-library(tidyverse) 
-library(tidyr) 
-library(sf) 
-library(dplyr)
-library(ggplot2)
-library(osmdata)
-library(phonTools)
-library(spdep)
+check_pkg <- function(x)
+  {
+    if (!library(x, character.only = TRUE, logical.return = TRUE)) {
+      install.packages(x, dep = TRUE)
+      if (!library(x, character.only = TRUE, 
+                  logical.return = TRUE)) stop("Package not found")
+    }
+}
 
-if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan")
-library(dbscan)
-if(!"factoextra" %in% rownames(installed.packages())) install.packages("dbscan")
-library(factoextra)
-if(!"spatstat" %in% rownames(installed.packages())) install.packages("dbscan")
-library(spatstat)
-
+check_pkg("sf")
+check_pkg("readr")    
+check_pkg("tidyverse")
+check_pkg("tidyr")
+check_pkg("dplyr")
+check_pkg("ggplot2")
+check_pkg("osmdata")
+check_pkg("phonTools")
+check_pkg("spdep")
+check_pkg("dbscan")
+check_pkg("factoextra")
+check_pkg("spatstat")
+check_pkg("leaflegend")
+check_pkg("leaflet.extras")
+check_pkg("leaflet")
+check_pkg("httr")
 ```
 
 ```{r}
@@ -66,6 +80,9 @@ crs_wgs84 <- 4326
 ```{r}
 accidents <- st_read("roadtrafficaccidentlocations.gpkg")
 #head(accidents)
+zh_city_boundary <- st_read('data/Zurich_city_boundary_2024.gpkg')
+zh_city_roads <- st_read('data/Strassennetz_-OGD.gpkg')
+zh_city_districts <- st_read('data/Zurich_city_districts_2024.gpkg')
 ```
 
 As the point dimension seems to have a Z coordinate, which is always 0, we remove it here already.
@@ -237,11 +254,6 @@ bbox <- st_bbox(bicycle_accidents)
 ```
 
 ```{r}
-zh_city_boundary <- st_read('data/Zurich_city_boundary_2024.gpkg')
-zh_city_roads <- st_read('data/Strassennetz_-OGD.gpkg')
-```
-
-```{r}
 ggplot() +
   geom_sf(data = zh_city_boundary) +
   #geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
@@ -264,7 +276,7 @@ ggplot() +
 
 ## Task 6:
 
-From the bicycle accidents, extract the years 2018 to 2021 and compute clusters for each year separately, using a clustering method you deem appropriate for the task, and choose the control parameters appropriately to capture the types of clusters you had in mind in your definition of Task 5. Justify your choice.
+*From the bicycle accidents, extract the years 2018 to 2021 and compute clusters for each year separately, using a clustering method you deem appropriate for the task, and choose the control parameters appropriately to capture the types of clusters you had in mind in your definition of Task 5. Justify your choice.*
 
 | We try to extract the clusters by using DBSCAN, as the method is a broadly used algorithm to detect spatial clusters. We apply this, because we have clusters of arbitrary shapes and large dataframes. Moreover, rather than looking at a certain attribute, we are interested in the spatial component, which can be analysed well with DBSCAN.
 
@@ -318,27 +330,27 @@ fviz_nbclust(bicycle_crd_2021, kmeans, method = "silhouette")
 dbscan::kNNdistplot(bicycle_crd_2018, k = 3)
 
 # We can somehow see a knee at about 0.009 km.
-abline(h = 0.009, col = "red")
+abline(h = 900, col = "red")
 
 # So, let's also try 0.005 km.
-graphics::abline(h = 0.004, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.009, minPts = 3)
+db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 900, minPts = 3)
 db18_01
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_01$cluster + 1,
      main = "DBSCAN result with eps = 0.009 km",
      asp = 1)
 
-db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.004, minPts = 3)
+db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 400, minPts = 3)
 db18_02
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_02$cluster + 1,
      main = "DBSCAN result with eps = 0.004 km",
      asp = 1)
 
-db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 0.002, minPts = 3)
+db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 200, minPts = 3)
 db18_03
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = db18_03$cluster + 1,
@@ -355,28 +367,28 @@ plot(bicycle_crd_2018,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2019, k = 3)
 
-# We can somehow see a knee at about 0.014 km.
-abline(h = 0.01, col = "red")
+# We can somehow see a knee at about 
+abline(h = 800, col = "red")
 
 # So, let's also try  0.005 km.
-graphics::abline(h = 0.004, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.01, minPts = 3)
+db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 800, minPts = 3)
 db19_01
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_01$cluster + 1,
      main = "DBSCAN result with eps = 0.01 km",
      asp = 1)
 
-db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.004, minPts = 3)
+db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 400, minPts = 3)
 db19_02
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_02$cluster + 1,
      main = "DBSCAN result with eps = 0.004 km",
      asp = 1)
 
-db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 0.002, minPts = 3)
+db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 200, minPts = 3)
 db19_03
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_03$cluster + 1,
@@ -393,28 +405,28 @@ plot(bicycle_crd_2019,
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2020, k = 3)
 
-# We can somehow see a knee at about 0.014 km.
-abline(h = 0.014, col = "red")
+# We can somehow see a knee at about 0.04 km.
+abline(h = 1000, col = "red")
 
 # So, let's also try  0.005 km.
-graphics::abline(h = 0.005, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.014, minPts = 3)
+db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 1000, minPts = 3)
 db20_01
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_01$cluster + 1,
      main = "DBSCAN result with eps = 0.014 km",
      asp = 1)
 
-db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.005, minPts = 3)
+db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 400, minPts = 3)
 db20_02
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_02$cluster + 1,
      main = "DBSCAN result with eps = 0.005 km",
      asp = 1)
 
-db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 0.0025, minPts = 3)
+db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 250, minPts = 3)
 db20_03
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_03$cluster + 1,
@@ -432,27 +444,27 @@ plot(bicycle_crd_2020,
 dbscan::kNNdistplot(bicycle_crd_2021, k = 3)
 
 # We can somehow see a knee at about 0.012 km.
-abline(h = 0.012, col = "red")
+abline(h = 800, col = "red")
 
 # So, let's also try  0.004 km.
-graphics::abline(h = 0.004, col = "blue")
+graphics::abline(h = 400, col = "blue")
 
 # Now compute DBSCAN with different values for eps.
-db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.012, minPts = 3)
+db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 800, minPts = 3)
 db21_01
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_01$cluster + 1,
      main = "DBSCAN result with eps = 0.012 km",
      asp = 1)
 
-db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.003, minPts = 3)
+db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 400, minPts = 3)
 db21_02
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_02$cluster + 1,
      main = "DBSCAN result with eps = 0.003 km",
      asp = 1)
 
-db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 0.002, minPts = 3)
+db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 200, minPts = 3)
 db21_03
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_03$cluster + 1,
@@ -466,7 +478,7 @@ Here, the help of ChatGPT was used to get the OPTICS algorithm right.
 
 ```{r}
 # First run with eps = 0.05 and minPts = 3
-db <- dbscan::optics(bicycle_crd_2018, eps = 0.05, minPts = 3)
+db <- dbscan::optics(bicycle_crd_2018, eps = 500, minPts = 3)
 db
 clusters <- dbscan::extractXi(db, xi = 0.05)
 plot(bicycle_crd_2018, 
@@ -475,7 +487,7 @@ plot(bicycle_crd_2018,
      asp = 1)
 
 # Second run with eps = 0.015 and minPts = 5
-db <- dbscan::optics(bicycle_crd_2018, eps = 0.015, minPts = 5)
+db <- dbscan::optics(bicycle_crd_2018, eps = 150, minPts = 5)
 db
 clusters <- dbscan::extractXi(db, xi = 0.05)  # Re-extract clusters for this run
 plot(bicycle_crd_2018, 
@@ -487,7 +499,7 @@ plot(bicycle_crd_2018,
 
 ## Task 7:
 
-Discuss your results, including also limitations or problems, and possible other methods that you could have used.
+*Discuss your results, including also limitations or problems, and possible other methods that you could have used.*
 
 | In the cluster diagrams of the years 2018-2021 there is not too much variation from one year to another. What stands out in every diagram, at least the two more accurate ones (with the two smallest eps distance) show the kernel around the main train station nicely. We could say that the Zurich HB/ Central acts as a bicycle accident herd. This is no surprise as many tram lines pass by the Zurich HB, as well as that is very often crowded with cars, pedestrians and cyclists.
 | 
@@ -498,7 +510,7 @@ Discuss your results, including also limitations or problems, and possible other
 
 ## Task 8:
 
-Given the clusters that you have extracted in Part 1 of the DC1 assignment: a. Define a set of criteria that a method should fulfill that can be used to delineate the given clusters by polygons. Use free text for these definitions, but try to be concise and precise. (Note: These criteria can also be used in the subsequent Discussion to evaluate whether they have been met.) b. Choose a polygon delineation method that you deem appropriate in light of the above criteria. Justify your choice.
+*Given the clusters that you have extracted in Part 1 of the DC1 assignment: a. Define a set of criteria that a method should fulfill that can be used to delineate the given clusters by polygons. Use free text for these definitions, but try to be concise and precise. (Note: These criteria can also be used in the subsequent Discussion to evaluate whether they have been met.) b. Choose a polygon delineation method that you deem appropriate in light of the above criteria. Justify your choice.*
 
 ### 8a)
 
@@ -514,33 +526,36 @@ Given the clusters that you have extracted in Part 1 of the DC1 assignment: a. D
 
 ## Task 9:
 
-From the years 2018 to 2021 for which you computed clusters in Task 6, choose at least two years and apply your polygon delineation method of choice to each of these two years separately. Compute the Jaccard Index (aka Intersection over Union) for pair(s) of selected years and present and discuss the results.
+*From the years 2018 to 2021 for which you computed clusters in Task 6, choose at least two years and apply your polygon delineation method of choice to each of these two years separately. Compute the Jaccard Index (aka Intersection over Union) for pair(s) of selected years and present and discuss the results.*
 
 ```{r}
 # OPTICS with the extractXi() function on the data
 #2018
-pt_bike18_reach <- dbscan::optics(bicycle_crd_2018, eps = 1000.0, minPts = 3)
+pt_bike18_reach <- dbscan::optics(bicycle_crd_2018, eps = 500, minPts = 10)
 pt_bike18_reach <- dbscan::extractXi(pt_bike18_reach, xi = 0.05)
 # Extract reachability distances from the OPTICS object
 reachdist <- pt_bike18_reach$reachdist
 
 # Plot reachability distances with specific ylim settings
-plot(reachdist, type = "l", ylim = c(0, 0.015), xlab = "Points", ylab = "Reachability Distance",
-     main = "Reachability Plot 2018")
+plot(reachdist, type = "l", ylim = c(0,700), xlab = "Points", ylab = "Reachability Distance",main = "Reachability Plot 2018")
  
 dbscan::hullplot(bicycle_crd_2018, pt_bike18_reach, asp = 1, main = "Convex Hull Plot 2018")
 
 #2019
-pt_bike19_reach <- dbscan::optics(bicycle_crd_2019, eps = 1000.0, minPts = 3)
+pt_bike19_reach <- dbscan::optics(bicycle_crd_2019, eps = 500, minPts = 3)
 pt_bike19_reach <- dbscan::extractXi(pt_bike19_reach, xi = 0.05)
 # Extract reachability distances from the OPTICS object
 reachdist <- pt_bike19_reach$reachdist
 
 # Plot reachability distances with specific ylim settings
-plot(reachdist, type = "l", ylim = c(0, 0.015), xlab = "Points", ylab = "Reachability Distance",
+plot(reachdist, type = "l", ylim = c(0,700), xlab = "Points", ylab = "Reachability Distance",
      main = "Reachability Plot 2019")
  
 dbscan::hullplot(bicycle_crd_2019, pt_bike19_reach, asp = 1, main = "Convex Hull Plot 2019")
+```
+
+```{r}
+summary(reachdist)
 ```
 
 ## Task 9 (alternative):
@@ -632,13 +647,13 @@ jaccard(matrix18, matrix19)
 jaccard(pt_bike18_reach, pt_bike19_reach)
 ```
 
-| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above jaccard index's score.
+| A value of 0.25 between the years 2018 and 2019 shows that the delineated polygons overlap with each other indeed but not too much. 0 means no intersection at all, whereby 1 would mean one area is covered by another, thus, they would have the same clusters and the same sizes in the two analysed years. We don't have the latter case, which can also be observer in the convex hull plots at the start of task 9. We assume however, that the main clusters do overlap, which is what makes out the above Jaccard index's score.
 
 ## Task 10:
 
-Overall, what did you find with the above steps? What do these steps tell you about the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing the given data? Any other points of note?
+*Overall, what did you find with the above steps? What do these steps tell you about the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing the given data? Any other points of note?*
 
-Trying to plot four graphs next to each other
+Plotting four graphs next to each other for easier comparison:
 
 ```{r}
 # 4 figures arranged in 2 rows and 2 columns
@@ -673,14 +688,12 @@ plot(bicycle_crd_2021,
 
 ```
 
-*Task 10: Overall, what did you find with the above steps? What do these steps tell you about the situation of bicycle accidents in Zurich? How useful are the methods used so far in analysing the given data? Any other points of note?*
-
 | The above steps and graphs show us that the largest accident herd in the city of Zurich is between the upper end of lake Zurich and Letten. On all the graphs, a large blob of points can be seen. On the standard deviational ellipse we could also see this well.
 | However, we cannot tell much about the other areas and streets around it as the point clusters don't seem like the best option to analyse such herds. This method with coloring the different clusters seems more adapt for datasets wich are to be clustered by classes. As we don't have classes here we want to distinguish but rather analyse densities, a kernel density estimation would be of more interest.
 
 ## Task 11
 
-Similarly to the clustering and polygon delineation tasks carried out in Parts 1 and 2 of DC1, respectively, start off by defining **criteria for using KDE to detect areas/hotspots of elevated bicycle accident density**, and explain your reasoning.
+*Similarly to the clustering and polygon delineation tasks carried out in Parts 1 and 2 of DC1, respectively, start off by defining **criteria for using KDE to detect areas/hotspots of elevated bicycle accident density**, and explain your reasoning.*
 
 Bandwidth selection and the kernel shape are the key criteria to define for using KDE.
 
@@ -690,7 +703,7 @@ We work with the bivariate normal kernel, which is the standard in kernelUD{adeh
 
 ## Task 12
 
-Choose any two years from the years 2018 to 2021 (justify your choice of years) and compute the KDE surfaces for each of these two separately and visualize your results. You are free to choose the KDE implementation (i.e., R package and function(s)) as well as the parameters (bandwidth selection method, etc.), but you should document your choices and discuss, in the subsequent Task 14, your results in light of your choices.
+*Choose any two years from the years 2018 to 2021 (justify your choice of years) and compute the KDE surfaces for each of these two separately and visualize your results. You are free to choose the KDE implementation (i.e., R package and function(s)) as well as the parameters (bandwidth selection method, etc.), but you should document your choices and discuss, in the subsequent Task 14, your results in light of your choices.*
 
 ```{r}
 #installing packages adehabitatHR and ks for KDE
@@ -699,18 +712,6 @@ library(adehabitatHR)
 if(!"ks" %in% rownames(installed.packages())) install.packages("ks")
 library(ks)
 ```
-
-As the conversion from sf objects to sp needs a geometry column like POINT (X Y), so without the Z, we have to remove it
-
-Remove the Z coordinate from the geometry column
-
-bicycle_accidents_2018 \<- sf::st_zm(bicycle_accidents_2018)
-
-Check if the Z coordinate has been successfully removed
-
-print(bicycle_accidents_2018)
-
-bicycle_accidents_2019 \<- sf::st_zm(bicycle_accidents_2019) bicycle_accidents_2020 \<- sf::st_zm(bicycle_accidents_2020) bicycle_accidents_2021 \<- sf::st_zm(bicycle_accidents_2021)
 
 ```{r}
 #| label: kde-adehabitatHR
@@ -833,7 +834,7 @@ length(bicycle_accidents_2018$value) == nrow(matrix18)
 
 ## Task 13
 
-Compute the “volume of intersection” (“VI”) between the KDE surfaces (utilization distributions) of the two years. Hint: There are different ways to do that, but the adehabitatHR package has functionality for that. How do the results correspond to those of Task 9 (Jaccard Index or IoU)?
+*Compute the “volume of intersection” (“VI”) between the KDE surfaces (utilization distributions) of the two years. Hint: There are different ways to do that, but the adehabitatHR package has functionality for that. How do the results correspond to those of Task 9 (Jaccard Index or IoU)?*
 
 ```{r}
 #theory:
@@ -870,13 +871,13 @@ head(spatial_points)
 
 ## Task 14
 
-Discuss your results for this part of DC1 (density estimation). What did you find? Compare the results of this part with the clusters/polygons of Parts 1 and 2 (see note below): What are the commonalities? What are the differences? Which method(s) perform more ade- quately than others for the given problem and data? Which method(s) would you recommend, and which ones not? Why? (You are free to add more points to the discussion.)
+*Discuss your results for this part of DC1 (density estimation). What did you find? Compare the results of this part with the clusters/polygons of Parts 1 and 2 (see note below): What are the commonalities? What are the differences? Which method(s) perform more ade- quately than others for the given problem and data? Which method(s) would you recommend, and which ones not? Why? (You are free to add more points to the discussion.)*
 
 | bla
 
 ## Task 15
 
-Choose one or more distance measure functions (justify your choice) and compute it/them for a. all bicycle accidents (2011 - 2021) b. bicycle accidents for one of the years selected in Task 6 c. bicycle accidents for only the cluster points of the year selected in (b) Restrict your analysis to the “inner city” and use the same window for all point sets. It’s up to you to define the extent of the “inner city” and explain/justify what that means in terms of this data challenge.
+*Choose one or more distance measure functions (justify your choice) and compute it/them for a. all bicycle accidents (2011 - 2021) b. bicycle accidents for one of the years selected in Task 6 c. bicycle accidents for only the cluster points of the year selected in (b) Restrict your analysis to the “inner city” and use the same window for all point sets. It’s up to you to define the extent of the “inner city” and explain/justify what that means in terms of this data challenge.*
 
 ### a)
 
@@ -939,7 +940,7 @@ plot(db18_02_gf, main = "G-function for bicycle accidents 2018 points")
 
 ## Task 16
 
-Now choose the following two pairs of years, 2018 & 2019, as well as 2018 & 2021, and compute the cross-X function, where “X” stands for the function(s) you used in Task 15. Use the AccidentYear as the marks to produce a marked point pattern.
+*Now choose the following two pairs of years, 2018 & 2019, as well as 2018 & 2021, and compute the cross-X function, where “X” stands for the function(s) you used in Task 15. Use the AccidentYear as the marks to produce a marked point pattern.*
 
 ```{r}
 #marked ppp using setmarks() and the "AccidentYear" attribute
@@ -968,7 +969,7 @@ plot(bicycle_crd_kcross, main = "Cross-G-function for all bicycle accidents poin
 
 ## Task 17
 
-Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.
+*Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.*
 
 ```{r}
 
@@ -976,9 +977,62 @@ Discuss your results. Similarities and differences between the various point set
 
 ## Task 18
 
-From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, compute the counts within the ‘statistical zones’ of Zurich and use these counts to compute the Getis-Ord G\*-statistic for each of your counts layers. Visualize your results appropriately.
+*From the bicycle accidents data, choose at least two relevant variables that make sense being compared, e.g. two different accident types, severity levels, times of day, years etc. For these selected accidents, **compute the counts within the ‘statistical zones’** of Zurich and **use these counts to compute the Getis-Ord G\*-statistic** for each of your counts layers. Visualize your results appropriately.*
 
---\> ich nimme mal 2 accident types, mer chönds ja nachher au ändere wenn öppis anders schlauer erschiint.
+```{r}
+stat_zones <- st_read("data/zh_stat_zones.gpkg")
+```
+
+```{r}
+### Read boundaries of statistical neighborhoods of Zurich
+
+# Definition of the specific URL of the WFS
+wfs_url <- "https://www.ogd.stadt-zuerich.ch/wfs/geoportal/Statistische_Quartiere?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0"
+
+# Parse URL into a list for easier addition of information to the URL
+url <- httr::parse_url(wfs_url)
+
+# Instruct the WFS what information it should return.
+# url$query was previously empty and is now being filled.
+url$query <- list(service = "WFS",
+                   request = "GetFeature",
+                   typename = "adm_statistische_quartiere_map",
+                   outputFormat = "GeoJSON"
+                 )
+
+# Inverse of parse_url (builds a URL from a list object)
+request <- httr::build_url(url)
+
+# sf::st_read can directly read WFS data into a data frame.
+# WFS data is in WGS84, hence we need to transform to Swiss CRS LV95.
+quart_sf <- sf::st_read(request, quiet = TRUE) |>
+                        sf::st_transform(., crs = crs_lv95)
+```
+
+```{r}
+### Count overall accidents per neighborhood polygon
+quart_sf <- quart_sf |>
+  dplyr::mutate(acc_count = base::lengths(sf::st_intersects(quart_sf, bicycle_accidents)))
+
+# Calculate also accident density per km^2 for choropleth map
+quart_sf <- quart_sf |> 
+  dplyr::mutate(acc_dens = 1e6 * acc_count / sf::st_area(quart_sf))
+```
+
+```{r}
+### mapview package
+check_pkg("mapview")
+
+# Plot bike accident counts per neighborhood as proportional circle map, overlaid
+# on a map of the Zurich districts.
+# We can add together multiple map layer using the '+' sign.
+# Note that the scaling of both the color ramp and the circle sizes
+# is automatic, using reasonable defaults.
+mapview::mapview(quart_sf, layer.name = "Districts", 
+                 zcol = "kname", alpha.regions = 0.5) +
+  mapview::mapview(sf::st_centroid(quart_sf), 
+                 layer.name = "Accident counts", cex = "acc_count")
+```
 
 ```{r}
 #counts of two severity types (counts are needed for the Getis-Ord G-statistic)
@@ -988,109 +1042,4 @@ bicycle_severities <- bicycle_accidents |>
   summarize(count = n()) |>   
   st_drop_geometry()  
 bicycle_severities
-
 ```
-
-```{r}
-#get rid of the z-coordinate in the geometry
-bicycle_accidents <- st_zm(bicycle_accidents)
-#coords_2d <- st_zm(st_geometry(bicycle_accidents))
-```
-
-```{r}
-#| label: g-stat-weights
-#| 
-# library("spdep")
-
-# Find nearest neighbors within 2 kilometers (= 2000 m).
-# You should play with nn.dis and see what it does to connectivity.
-nn_dis <- 2000
-
-# We first call dnearneigh() with min. distance = 0 and max. distance = nn_dis.
-# This creates an nb object, that is, a list of Euclidean neighbors for each 
-# point in sads_comp_sp.
-bicycle_accidents_nb <- spdep::dnearneigh(bicycle_accidents, 0, nn_dis)
-
-# We then call nb2listw() to convert the nb object sads_nb_u into a 
-# listw object sads_lw_u, which contains the spatial weights used to 
-# compute the G-statistic. Style = 'B' means that binary weights are generated 
-# (1 if inside nn_dis, 0 if outside nn_dis). Using the include.self() function
-# includes the self-weights w_{ii} > 0, and thus later results in Gi* statistics
-# being computed instead of simply G statistics.
-bicycle_accidents_lw <- spdep::nb2listw(spdep::include.self(bicycle_accidents_nb), style = "B")
-
-```
-
-```{r}
-#trying the same procedure with only one year bc the nb object is way too big
-bicycle_accidents18_nb <- spdep::dnearneigh(bicycle_accidents_2018, 0, nn_dis)
-
-bicycle_accidents18_lw <- spdep::nb2listw(spdep::include.self(bicycle_accidents18_nb), style = "B")
-```
-
---\> de folgendi chunk lauft irgendwie nie richtig dure und bim abbreche chunnt folgende Fehler: Fehler in db18_02\[, 1\] : falsche Anzahl von Dimensionen. Kei Ahnig wieso aber irgendwie schiints verchnüpft zsii oder R isch wieder am abkacke bi mir. Obe bim Task 15c chunnt de Fehler mit de Dimensione bi mir au. Check nöd wieso
-
-```{r}
-summary(bicycle_accidents18_nb)
-```
-
-```{r}
-# Create the line links from the nb object, requesting an sf object to be returned.
-# CRS needs to be set as it was carried over to the nb object.
-
-#bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
-
-bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = sf::st_geometry(bicycle_accidents), as_sf = TRUE) |> sf::st_set_crs(crs_lv95)
-
-#bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
-
-# Plot the neighbor links using functions from the tmap package
-tmap::tm_shape(cantons_bound) + tmap::tm_borders(col = "gray") +
-  tmap::tm_shape(sads_links) + tmap::tm_lines(col = "red", lwd = 0.5) +
-  tmap::tm_shape(bicycle_accidents) + tmap::tm_dots(col = "black", size = 0.1) +
-  tmap::tm_scale_bar(position = c("right", "bottom"), width = 0.2) +
-  tmap::tm_layout(
-    title = paste("Neighbor links within ",
-                  nn_dis / 1000, " km", sep = ""),
-    title.position = c("left", "top"),
-    title.size = 1.1,
-    title.fontface = "bold",
-    frame = FALSE,
-    inner.margins = c(0.05, 0.05, 0.05, 0.05)
-  )
-```
-
-Laura: Ich hans da mal nur mitem 2018 versuecht, wil d datemengi rieesig isch. Han statt sads_links d accident_links gno aber ka
-
-```{r}
-# Create the line links from the nb object, requesting an sf object to be returned.
-# CRS needs to be set as it was carried over to the nb object.
-
-#bicycle_accidents_links <- spdep::nb2lines(bicycle_accidents_nb, coords = coords_2d, as_sf = TRUE)
-
-bicycle_accidents18_links <- spdep::nb2lines(bicycle_accidents18_nb, coords = sf::st_geometry(bicycle_accidents_2018), as_sf = TRUE) |> sf::st_set_crs(crs_lv95)
-
-#bicycle_accidents_links <- st_set_crs(bicycle_accidents_links, crs_lv95)
-
-# Plot the neighbor links using functions from the tmap package
-tmap::tm_shape(zh_city_boundary) + tmap::tm_borders(col = "gray") +
-  tmap::tm_shape(bicycle_accidents18_links) + tmap::tm_lines(col = "red", lwd = 0.5) +
-  tmap::tm_shape(bicycle_accidents_2018) + tmap::tm_dots(col = "black", size = 0.1) +
-  tmap::tm_scale_bar(position = c("right", "bottom"), width = 0.2) +
-  tmap::tm_layout(
-    title = paste("Neighbor links within ",
-                  nn_dis / 1000, " km", sep = ""),
-    title.position = c("left", "top"),
-    title.size = 1.1,
-    title.fontface = "bold",
-    frame = FALSE,
-    inner.margins = c(0.05, 0.05, 0.05, 0.05)
-  )
-```
-
-## Task 19
-
-Discuss your results. What did you find regarding the hot and cold spots in your accident count layers? How do they compare to each other across layers and across (past) methods? etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial weight formation) on your results.
-
-| blabla
-| 
