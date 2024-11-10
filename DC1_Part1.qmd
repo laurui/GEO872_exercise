@@ -33,12 +33,6 @@ editor: visual
 
 -   12: 95% sachen anpassen & verstehen was anpassen, sodass gut ausschaut
 
-alter package block:
-
-library(readr) library(tidyverse) library(tidyr) library(sf) library(dplyr) library(ggplot2) library(osmdata) library(phonTools) library(spdep)
-
-if(!"dbscan" %in% rownames(installed.packages())) install.packages("dbscan") library(dbscan) if(!"factoextra" %in% rownames(installed.packages())) install.packages("dbscan") library(factoextra) if(!"spatstat" %in% rownames(installed.packages())) install.packages("dbscan") library(spatstat)
-
 ```{r}
 check_pkg <- function(x)
   {
@@ -65,6 +59,7 @@ check_pkg("leaflegend")
 check_pkg("leaflet.extras")
 check_pkg("leaflet")
 check_pkg("httr")
+check_pkg("spdep")
 ```
 
 ```{r}
@@ -1038,8 +1033,73 @@ mapview::mapview(quart_sf, layer.name = "Districts",
 #counts of two severity types (counts are needed for the Getis-Ord G-statistic)
 bicycle_severities <- bicycle_accidents |>   
   group_by(AccidentSeverityCategory_en) |>
-  filter(AccidentSeverityCategory_en == "Accident with light injuries" | AccidentSeverityCategory_en == "Accident with severe injuries") |>
+  filter(AccidentSeverityCategory_en == "Accident with light injuries" | AccidentSeverityCategory_en == "Accident with severe injuries" |
+           AccidentSeverityCategory_en == "Accident with fatalities") |>
   summarize(count = n()) |>   
   st_drop_geometry()  
 bicycle_severities
+```
+
+```{r}
+# Counting accidents of severity type 'light' vs 'severe'
+
+# Filter the bicycle accidents dataset
+accidents_light <- bicycle_accidents %>%
+  dplyr::filter(AccidentSeverityCategory_en == "Accident with light injuries")  
+
+accidents_severe <- bicycle_accidents %>%
+  dplyr::filter(AccidentSeverityCategory_en == "Accident with severe injuries")  
+
+# Count the number of accidents of each type in each stat zone
+accidents_light_count <- sf::st_intersects(quart_sf, accidents_light) %>%
+  lengths()  # This gives the count of accidents within each statistical zone
+
+accidents_severe_count <- sf::st_intersects(quart_sf, accidents_severe) %>%
+  lengths()
+  
+# Add the counts to the stat_zones object
+quart_sf$accidents_light_count <- accidents_light_count
+quart_sf$accidents_severe_count <- accidents_severe_count
+
+```
+
+```{r}
+# Define neighbours for each zone (Queen's case - sharing a border or vertex)
+# This creates a spatial weights list based on shared boundaries (contiguity)
+neighbours <- spdep::poly2nb(quart_sf)
+
+# Create a spatial weights list object from neighbours
+weights <- spdep::nb2listw(neighbours, style = "W")  # "W" means row-standardized weights
+
+# Calculate the Getis-Ord G* statistic for both accident counts
+
+# Before it seemed the column was no vector, now ensure the column is a numeric vector
+quart_sf$accidents_light_count <- as.numeric(quart_sf$accidents_light_count)
+g_star_light <- spdep::localG(quart_sf$accidents_light_count, listw = weights)
+
+# Ensure the column is a numeric vector
+quart_sf$accidents_severe_count <- as.numeric(quart_sf$accidents_severe_count)
+g_star_severe <- spdep::localG(quart_sf$accidents_severe_count, listw = weights)
+
+# Add G* statistics to the stat_zones dataframe
+quart_sf$g_star_light <- g_star_light
+quart_sf$g_star_severe <- g_star_severe
+
+```
+
+```{r}
+check_pkg("spdep")
+
+# Plot Getis-Ord G* statistic for light accidents
+tm_shape(quart_sf) +
+  tm_borders() +
+  tm_fill(col = "g_star_light", palette = "RdBu", style = "cont") +
+  tm_layout(main.title = "Getis-Ord G* for Light Bike Accidents", title.position = c("left", "top"))
+
+# Plot Getis-Ord G* statistic for severe bicycle accidents
+tm_shape(quart_sf) +
+  tm_borders() +
+  tm_fill(col = "g_star_severe", palette = "RdBu", style = "cont") +
+  tm_layout(main.title = "Getis-Ord G* for Severe Bike Accidents", title.position = c("left", "top"))
+
 ```
