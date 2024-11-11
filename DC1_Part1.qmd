@@ -7,31 +7,9 @@ editor: visual
 
 # DC1 Assignment, Part 1 (Spatial Clustering)
 
-## Fragen an Röbi/Peter:
+## Preliminary work
 
--   gehören fragen in dcs schon zum essay teil und müssen separat geschrieben werden oder zsm gut?
-
--   wieviel muss geschrieben werden? eher task - paragraph oder seitenweise?
-
--   bis wann werden neue parts des DC1 eingeführt? (neue aufgaben)
-
--   kurzes feedback zu unserem zwischenstand? in etwa was sie sich vorgestellt haben??
-
--   **criteria for using KDE:** was ist gemeint? (evtl im buch –\> sind einfach kernel shape und bandwidth, nicht mehr)
-
-## Notizen für uns
-
--   bike datensätze aufräumen: bereinigen alles beieinander beispielsweise
-
--   kommentare in unseren worten schreiben!
-
--   task 9 besser?
-
--   task 10, 11, 12, 13
-
--   für zwei verschieden aussehende jahre machen (bisher immer 18/19 oder nur 18)
-
--   12: 95% sachen anpassen & verstehen was anpassen, sodass gut ausschaut
+### Downloading necessary packages
 
 ```{r}
 check_pkg <- function(x)
@@ -59,8 +37,13 @@ check_pkg("leaflegend")
 check_pkg("leaflet.extras")
 check_pkg("leaflet")
 check_pkg("httr")
+check_pkg("httr2")
 check_pkg("spdep")
+check_pkg("tmap")
+check_pkg("mapview")
 ```
+
+### Defining relevant coordinate systems:
 
 ```{r}
 crs_lv03  <- 21781 
@@ -74,13 +57,12 @@ crs_wgs84 <- 4326
 
 ```{r}
 accidents <- st_read("roadtrafficaccidentlocations.gpkg")
-#head(accidents)
 zh_city_boundary <- st_read('data/Zurich_city_boundary_2024.gpkg')
 zh_city_roads <- st_read('data/Strassennetz_-OGD.gpkg')
 zh_city_districts <- st_read('data/Zurich_city_districts_2024.gpkg')
 ```
 
-As the point dimension seems to have a Z coordinate, which is always 0, we remove it here already.
+As the point dimension seems to have a Z coordinate which is always 0, we remove it here already.
 
 ```{r}
 # Remove the Z coordinate from the geometry column
@@ -90,10 +72,6 @@ accidents <- sf::st_zm(accidents)
 print(accidents)
 ```
 
-```{r}
-plot(accidents)
-```
-
 ## Task 2:
 
 *Report the following numbers in table(s):*
@@ -101,7 +79,7 @@ plot(accidents)
 *a. Number of accidents by accident severity category*
 
 ```{r}
-#a. Number of accidents by accident severity category 
+#Filtering by accident severity 
 accident_severity <- accidents |>   
   group_by(AccidentSeverityCategory_de) |>   
   summarize(count = n()) |>   
@@ -112,7 +90,7 @@ accident_severity
 *b. Number of accidents by accident type*
 
 ```{r}
-#b. Number of accidents by accident type 
+#Filtering by accident type 
 accident_type <- accidents |>   
   group_by(AccidentType_de) |>   
   summarize(count = n()) |>   
@@ -123,7 +101,7 @@ accident_type
 *c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively. And combinations thereof (pedestrian AND bicycle, pedestrian AND motorcycle etc.). Are there any accidents involving all three modes (pedestrian, bicycle, motorcycle)?*
 
 ```{r}
-#c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
+#Filtering by accidents involving pedestrians, bicycles, and motorcycles, respectively 
 
 selected_involvements <- accidents |>   
   dplyr::select(AccidentInvolvingPedestrian, AccidentInvolvingBicycle, AccidentInvolvingMotorcycle)  
@@ -140,47 +118,47 @@ accident_involvements
 ```
 
 ```{r}
-#c. Number of accidents involving pedestrians, bicycles, and motorcycles, respectively 
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+# Count accidents involving all three categories
 all_three_involvements <- accidents |> 
   filter(AccidentInvolvingPedestrian == "true" & 
          AccidentInvolvingBicycle == "true" & 
          AccidentInvolvingMotorcycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
+  st_drop_geometry() |>
+  summarise(count = n()) |>
+  mutate(type = "Pedestrian, Bicycle, Motorcycle")
 
-all_three_involvements
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+# Count accidents involving pedestrians and bicycles
 ped_bike_inv <- accidents |> 
   filter(AccidentInvolvingPedestrian == "true" & 
          AccidentInvolvingBicycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
+  st_drop_geometry() |>
+  summarise(count = n()) |>
+  mutate(type = "Pedestrian, Bicycle")
 
-ped_bike_inv
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+# Count accidents involving bicycles and motorcycles
 bike_moto_inv <- accidents |> 
   filter(AccidentInvolvingMotorcycle == "true" & 
          AccidentInvolvingBicycle == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
+  st_drop_geometry() |>
+  summarise(count = n()) |>
+  mutate(type = "Bicycle, Motorcycle")
 
-bike_moto_inv
-
-# Count accidents involving all three categories (pedestrian, bicycle, motorcycle)
+# Count accidents involving pedestrians and motorcycles
 moto_ped_inv <- accidents |> 
   filter(AccidentInvolvingMotorcycle == "true" & 
          AccidentInvolvingPedestrian == "true") |>
-  st_drop_geometry()  |>
-  summarise(count = n())
+  st_drop_geometry() |>
+  summarise(count = n()) |>
+  mutate(type = "Pedestrian, Motorcycle")
 
-moto_ped_inv
+# Combine all counts into a single dataframe
+combined_counts <- bind_rows(all_three_involvements, ped_bike_inv, bike_moto_inv, moto_ped_inv)
+
+# Display the combined dataframe
+combined_counts
 ```
 
-There seem to be no accidents where all three involvements (bike, motorcycle and pedestrian) were registered.
+There are no accidents in the dataset where all three involvements (bike, motorcycle and pedestrian) were registered. However, the results of the combines categories pedestrian & bicycle stand out, having more than three times as many results as the combination bicycle & motorcycle as well as pedestrian & motorcycle.
 
 ## Task 3:
 
@@ -192,8 +170,7 @@ accident_per_year <- accidents |>
   mutate(AccidentYear = as.numeric(AccidentYear)) |>
   group_by(AccidentYear) |>   
   summarize(count_total = n()) |>   
-  st_drop_geometry()  
-accident_per_year
+  st_drop_geometry()
 
 #bicycle accidents per year
 bicycle_accidents_per_year <- accidents |>
@@ -202,7 +179,6 @@ bicycle_accidents_per_year <- accidents |>
   group_by(AccidentYear) |>   
   summarize(count_bicycle = n()) |>   
   st_drop_geometry()  
-bicycle_accidents_per_year
 
 #combine data
 total_plus_bicycle_per_year = left_join(accident_per_year, bicycle_accidents_per_year, by = "AccidentYear")
@@ -219,9 +195,9 @@ ggplot(accident_per_year, aes(x = AccidentYear, y= count_total))+
   theme_minimal() 
 
 ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
-  geom_line(aes(y = count_total, color = "Total Accidents"), size = 1) + 
+  geom_line(aes(y = count_total, color = "Total Accidents"), linewidth = 1) + 
   geom_point(aes(y = count_total, color = "Total Accidents"), size = 2) +
-  geom_line(aes(y = count_bicycle, color = "Bicycle Accidents"), size = 1) +
+  geom_line(aes(y = count_bicycle, color = "Bicycle Accidents"), linewidth = 1) +
   geom_point(aes(y = count_bicycle, color = "Bicycle Accidents"), size = 2) +
   labs(title = "Temporal Evolution of Accidents from 2011 to 2023",
        x = "Year",
@@ -236,28 +212,64 @@ ggplot(total_plus_bicycle_per_year, aes(x = AccidentYear)) +
 *Select only those accidents that involved a bicycle. From now on, and for the remainder of DC1, we will restrict our analysis to the accidents involving bicycles. With this subset, produce a map showing the bicycle accident data colored by accident severity category. Use a basemap such as OpenStreetMap and/or the boundary data available on OLAT, so the accidents can be visually and spatially referenced.*
 
 ```{r}
-library(httr2)
 bicycle_accidents <- accidents |>
   filter(AccidentInvolvingBicycle == "true")
 
 bbox <- st_bbox(bicycle_accidents)
-
-# osm_basemap <- opq(bbox = bbox) |>
-#   add_osm_feature(key="boundary", value = "administrative") %>%
-#   add_osm_feature(key="admin_level", value = "8") %>%
-#   osmdata_sf()
 ```
 
 ```{r}
 ggplot() +
   geom_sf(data = zh_city_boundary) +
-  #geom_sf(data = osm_basemap$osm_lines, color = "gray", size = 0.5, alpha = 0.7) +
   geom_sf(data = bicycle_accidents, aes(color = AccidentSeverityCategory_en), size = 1.5, alpha = 0.8) +
-  labs(title = "Accidents on OpenStreetMap Basemap",
-       subtitle = "Accidents plotted over streets from OSM",
+  labs(title = "Accidents in the city of Zurich",
+       subtitle = "Accidents coloured by severity",
        color = "Accident Severity") +
   coord_sf() +
   theme_minimal() 
+```
+
+Additionally to the basic visualisation above, we played around with leaflet maps (ChatGPT corrected our code however)
+
+```{r}
+#needed: library(leaflet)
+#library(sf)
+
+# Transform current data to WGS84 for use in leaflet
+boundaries_distr_leaflet <- st_transform(zh_city_districts, "WGS84")
+bicycle_accidents_leaflet <- st_transform(bicycle_accidents, "WGS84")
+
+# Define a colour palette specific to the severity categories
+severity_levels <- unique(bicycle_accidents$AccidentSeverityCategory_en)
+color_palette <- colorFactor(palette = "Set1", domain = severity_levels)
+
+# Create leaflet map
+map <- leaflet() %>%
+  setView(lng = 8.5219, lat = 47.3769, zoom = 11) %>%
+  addProviderTiles(provider = providers$CartoDB.Positron) %>%
+  addPolygons(data = boundaries_distr_leaflet, fill = FALSE, color = "black", weight = 1) %>%
+  addSearchOSM() %>%
+  setMaxBounds(lng1 = 8.5219 - 0.3, lat1 = 47.3769 - 0.3, lng2 = 8.5219 + 0.3, lat2 = 47.3769 + 0.3) %>%
+  addCircles(data = bicycle_accidents_leaflet,
+             color = ~color_palette(AccidentSeverityCategory_en),
+             radius = 10,
+             fill = TRUE,
+             fillOpacity = 0.9,
+             opacity = 1,
+             stroke = FALSE,
+             popup = ~AccidentSeverityCategory_en) %>% 
+  addControl("Accident Types in Zurich, Switzerland", position = "topright") %>%
+  addLegend(position = "topright",
+            colors = color_palette(severity_levels),
+            labels = severity_levels,
+            title = "Accident Severity") %>%
+  #addLayersControl(overlayGroups = c("Legend"),
+                   #options = layersControlOptions(collapsed = FALSE)) %>%
+  addFullscreenControl() %>%
+  addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
+
+map
+
 ```
 
 ## Task 5:
@@ -279,10 +291,6 @@ ggplot() +
 
 ```{r}
 bicycle_crd <- bicycle_accidents[, c("AccidentLocation_CHLV95_N", "AccidentLocation_CHLV95_E")]
-```
-
-```{r}
-#bicycle_crd <- sf::st_coordinates(bicycle_accidents)
 ```
 
 ```{r}
@@ -620,8 +628,7 @@ matrix21 <- bicycle_crd_2021[1:min_length, ]
 
 ```{r}
 #adehabitatHR::kerneloverlap()
-install.packages("vegan")
-library(vegan)
+check_pkg("vegan")
 df_18_19 <-data.frame(matrix18, matrix19)
 vegdist(df_18_19, method = "jaccard")
 
@@ -702,10 +709,8 @@ We work with the bivariate normal kernel, which is the standard in kernelUD{adeh
 
 ```{r}
 #installing packages adehabitatHR and ks for KDE
-if(!"adehabitatHR" %in% rownames(installed.packages())) install.packages("adehabitatHR")
-library(adehabitatHR)
-if(!"ks" %in% rownames(installed.packages())) install.packages("ks")
-library(ks)
+check_pkg("adehabitatHR")
+check_pkg("ks")
 ```
 
 ```{r}
@@ -827,6 +832,68 @@ plot(bicycle_accidents_2018, cex = 0.5, pch = 16, col = "black", add = TRUE)
 length(bicycle_accidents_2018$value) == nrow(matrix18)
 ```
 
+## Task 12 alternative
+
+```{r}
+check_pkg("stats")
+
+# stats::density() also requires a PPP object as input
+
+X_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_E)
+Y_crd <- as.numeric(bicycle_accidents$AccidentLocation_CHLV95_N)
+
+win_all <- as.owin(st_bbox(bicycle_accidents))
+bicycle_crd_ppp <- spatstat.geom::ppp(x = X_crd, y = Y_crd, window = win_all, unitname = c("meter", "meters"))
+
+summary(bicycle_crd_ppp)
+
+# We use the default color ramp of the base plot function for display.
+# Use the sigma argument for manual bandwidth selection.
+plot(stats::density(bicycle_crd_ppp, sigma = 250), 
+     main = "Bicycle accidents in Zurich, with density() and bandwidth sigma = 250")
+#plot(bicycle_accidents, add = TRUE, pch = 16, cex = 0.5, col = "white")
+
+```
+
+```{r}
+# Generate the KDE and convert to raster
+density_ppp <- stats::density(bicycle_crd_ppp, sigma = 250)
+density_raster <- raster::raster(density_ppp)
+
+# Set the CRS for the raster to WGS84 for using it with mapview
+raster::crs(density_raster) <- crs_lv95 #"+proj=longlat +datum=WGS84 +no_defs"
+
+# Save the raster as a PNG with transparency
+png_file <- "data/density_overlay.png"  # Specify path for saving
+png(png_file, width = 800, height = 800, bg = "transparent")
+plot(density_raster, col = hcl.colors(100, "YlOrRd", alpha = 0.7), legend = FALSE, axes = FALSE)
+dev.off()
+
+```
+
+```{r}
+### mapview package needed
+#gebastelt with this source: https://bookdown.org/nicohahn/making_maps_with_r5/docs/mapview.html
+
+check_pkg("png")
+png_file <- readPNG('data/density_overlay.png')
+
+mapview::mapview(quart_sf, alpha.regions = 0.3) +
+  mapview(density_raster)
+```
+
+```{r}
+# With the bw argument, automatic bandwidth selectors can be chosen:
+# nrd0 = Silverman's rule of thumb; nrd = variation by Scott (1992)
+# ucv, bcv = un/biased cross-validation
+# SJ-ste = Sheather & Jones (1991) "solve the equation" method
+# SJ-dpi = Sheather & Jones (1991) "direct plug-in" method
+den_bcv <- stats::density(bicycle_crd_ppp, bw = "bcv")
+plot(den_bcv, 
+     main = "Ungulates in SNP, with stats::density() and bw selector = BCV")
+#plot(bicycle_accidents, add = TRUE, pch = 16, cex = 0.5, col = "white")
+```
+
 ## Task 13
 
 *Compute the “volume of intersection” (“VI”) between the KDE surfaces (utilization distributions) of the two years. Hint: There are different ways to do that, but the adehabitatHR package has functionality for that. How do the results correspond to those of Task 9 (Jaccard Index or IoU)?*
@@ -868,7 +935,8 @@ head(spatial_points)
 
 *Discuss your results for this part of DC1 (density estimation). What did you find? Compare the results of this part with the clusters/polygons of Parts 1 and 2 (see note below): What are the commonalities? What are the differences? Which method(s) perform more ade- quately than others for the given problem and data? Which method(s) would you recommend, and which ones not? Why? (You are free to add more points to the discussion.)*
 
-| bla
+| blabla
+| 
 
 ## Task 15
 
@@ -968,9 +1036,8 @@ plot(bicycle_crd_kcross, main = "Cross-G-function for all bicycle accidents poin
 
 *Discuss your results. Similarities and differences between the various point sets? Noteworthy spatial and/or temporal patterns? Is any difference observable in the patterns of the cross-X function in the transition to the Covid-19 pandemic? etc. etc. Note: Consider in your interpretation that the distance scale may change between years.*
 
-```{r}
-
-```
+| blabla
+| 
 
 ## Task 18
 
@@ -1090,7 +1157,6 @@ quart_sf$g_star_severe <- g_star_severe
 ```
 
 ```{r}
-check_pkg("spdep")
 # Plot Getis-Ord G* statistic for light accidents
 tm_shape(quart_sf) +
   tm_borders() +
@@ -1105,5 +1171,4 @@ tm_shape(quart_sf) +
 
 ```
 
-
-```
+\`\`\`
