@@ -391,7 +391,7 @@ db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 200, minPts = 3)
 db19_03
 plot(bicycle_crd_2019, 
      cex = 0.5, pch = 19, col = db19_03$cluster + 1,
-     main = "DBSCAN result with eps = 200 m",
+     main = "2019 DBSCAN result with eps = 200 m",
      asp = 1)
 
 # 2020
@@ -401,7 +401,7 @@ db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 250, minPts = 3)
 db20_03
 plot(bicycle_crd_2020, 
      cex = 0.5, pch = 19, col = db20_03$cluster + 1,
-     main = "DBSCAN result with eps = 250 m",
+     main = "2020 DBSCAN result with eps = 250 m",
      asp = 1)
 
 # 2021
@@ -411,7 +411,7 @@ db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 250, minPts = 3)
 db21_03
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_03$cluster + 1,
-     main = "DBSCAN result with eps = 250 m",
+     main = "2021 DBSCAN result with eps = 250 m",
      asp = 1)
 ```
 
@@ -1104,6 +1104,4 @@ tm_shape(quart_sf) +
 
 ## Task 19
 
-Discuss your results. What did you find regarding the hot and cold spots in your accident count layers? How do they compare to each other across layers and across (past) methods?
-etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial
-weight formation) on your results.
+Discuss your results. What did you find regarding the hot and cold spots in your accident count layers? How do they compare to each other across layers and across (past) methods? etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial weight formation) on your results.
