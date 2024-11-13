@@ -323,155 +323,95 @@ bicycle_crd_2021 <- sf::st_coordinates(bicycle_accidents_2021)
 fviz_nbclust(bicycle_crd_2021, kmeans, method = "silhouette")
 ```
 
-### Bicycle accident clusters 2018
-
 ```{r}
-#| label: dbscan-bicycle-accidents
 # 2018
 # ------------------------------------------------------------------------------
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2018, k = 3)
+title(main = "k-Nearest Neighbours Plot for 2018")
 
-# We can somehow see a knee at about 0.009 km.
+# We can somehow see a knee at about 900 m.
 abline(h = 900, col = "red")
 
-# So, let's also try 0.005 km.
+# So, let's also try 400m.
 graphics::abline(h = 400, col = "blue")
 
-# Now compute DBSCAN with different values for eps.
-db18_01 <- dbscan::dbscan(bicycle_crd_2018, eps = 900, minPts = 3)
-db18_01
-plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db18_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.009 km",
-     asp = 1)
-
-db18_02 <- dbscan::dbscan(bicycle_crd_2018, eps = 400, minPts = 3)
-db18_02
-plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db18_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.004 km",
-     asp = 1)
-
-db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 200, minPts = 3)
-db18_03
-plot(bicycle_crd_2018, 
-     cex = 0.5, pch = 19, col = db18_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
-     asp = 1)
-```
-
-### Bicycle accident clusters 2019
-
-```{r}
-#| label: dbscan-bicycle-accidents
 # 2019
 # ------------------------------------------------------------------------------
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2019, k = 3)
+title(main = "k-Nearest Neighbours Plot for 2019")
 
-# We can somehow see a knee at about 
+# We can somehow see a knee at about 800 m.
 abline(h = 800, col = "red")
 
-# So, let's also try  0.005 km.
+# So, let's also try  500 m.
 graphics::abline(h = 400, col = "blue")
 
-# Now compute DBSCAN with different values for eps.
-db19_01 <- dbscan::dbscan(bicycle_crd_2019, eps = 800, minPts = 3)
-db19_01
-plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db19_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.01 km",
-     asp = 1)
-
-db19_02 <- dbscan::dbscan(bicycle_crd_2019, eps = 400, minPts = 3)
-db19_02
-plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db19_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.004 km",
-     asp = 1)
-
-db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 200, minPts = 3)
-db19_03
-plot(bicycle_crd_2019, 
-     cex = 0.5, pch = 19, col = db19_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
-     asp = 1)
-```
-
-### Bicycle accident clusters 2020
-
-```{r}
-#| label: dbscan-bicycle-accidents
 # 2020
 # ------------------------------------------------------------------------------
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2020, k = 3)
+title(main = "k-Nearest Neighbours Plot for 2020")
 
-# We can somehow see a knee at about 0.04 km.
+# We can somehow see a knee at about 1000 m.
 abline(h = 1000, col = "red")
 
-# So, let's also try  0.005 km.
+# So, let's also try  400 m.
 graphics::abline(h = 400, col = "blue")
 
-# Now compute DBSCAN with different values for eps.
-db20_01 <- dbscan::dbscan(bicycle_crd_2020, eps = 1000, minPts = 3)
-db20_01
-plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db20_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.014 km",
-     asp = 1)
-
-db20_02 <- dbscan::dbscan(bicycle_crd_2020, eps = 400, minPts = 3)
-db20_02
-plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db20_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.005 km",
-     asp = 1)
-
-db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 250, minPts = 3)
-db20_03
-plot(bicycle_crd_2020, 
-     cex = 0.5, pch = 19, col = db20_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.0025 km",
-     asp = 1)
-```
-
-### Bicycle accident clusters 2021
-
-```{r}
-#| label: dbscan-bicycle-accidents
 # 2021
 # ------------------------------------------------------------------------------
 # We first draw the kNN distance plot, maintaining minPts = k = 3.
 dbscan::kNNdistplot(bicycle_crd_2021, k = 3)
+title(main = "k-Nearest Neighbours Plot for 2021")
 
-# We can somehow see a knee at about 0.012 km.
+# We can somehow see a knee at about 800 m.
 abline(h = 800, col = "red")
 
-# So, let's also try  0.004 km.
+# So, let's also try  400 m.
 graphics::abline(h = 400, col = "blue")
+```
 
+```{r}
+# 2018
+# ------------------------------------------------------------------------------
 # Now compute DBSCAN with different values for eps.
-db21_01 <- dbscan::dbscan(bicycle_crd_2021, eps = 800, minPts = 3)
-db21_01
-plot(bicycle_crd_2021, 
-     cex = 0.5, pch = 19, col = db21_01$cluster + 1,
-     main = "DBSCAN result with eps = 0.012 km",
+db18_03 <- dbscan::dbscan(bicycle_crd_2018, eps = 200, minPts = 3)
+db18_03
+plot(bicycle_crd_2018, 
+     cex = 0.5, pch = 19, col = db18_03$cluster + 1,
+     main = "2018 DBSCAN result with eps = 200 m",
      asp = 1)
 
-db21_02 <- dbscan::dbscan(bicycle_crd_2021, eps = 400, minPts = 3)
-db21_02
-plot(bicycle_crd_2021, 
-     cex = 0.5, pch = 19, col = db21_02$cluster + 1,
-     main = "DBSCAN result with eps = 0.003 km",
+# 2019
+# ------------------------------------------------------------------------------
+# Now compute DBSCAN with different values for eps.
+db19_03 <- dbscan::dbscan(bicycle_crd_2019, eps = 200, minPts = 3)
+db19_03
+plot(bicycle_crd_2019, 
+     cex = 0.5, pch = 19, col = db19_03$cluster + 1,
+     main = "DBSCAN result with eps = 200 m",
      asp = 1)
 
-db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 200, minPts = 3)
+# 2020
+# ------------------------------------------------------------------------------
+# Now compute DBSCAN with different values for eps.
+db20_03 <- dbscan::dbscan(bicycle_crd_2020, eps = 250, minPts = 3)
+db20_03
+plot(bicycle_crd_2020, 
+     cex = 0.5, pch = 19, col = db20_03$cluster + 1,
+     main = "DBSCAN result with eps = 250 m",
+     asp = 1)
+
+# 2021
+# ------------------------------------------------------------------------------
+# Now compute DBSCAN with different values for eps.
+db21_03 <- dbscan::dbscan(bicycle_crd_2021, eps = 250, minPts = 3)
 db21_03
 plot(bicycle_crd_2021, 
      cex = 0.5, pch = 19, col = db21_03$cluster + 1,
-     main = "DBSCAN result with eps = 0.002 km",
+     main = "DBSCAN result with eps = 250 m",
      asp = 1)
 ```
 
@@ -480,22 +420,22 @@ plot(bicycle_crd_2021,
 Here, the help of ChatGPT was used to get the OPTICS algorithm right.
 
 ```{r}
-# First run with eps = 0.05 and minPts = 3
+# First run with eps = 500 m and minPts = 3
 db <- dbscan::optics(bicycle_crd_2018, eps = 500, minPts = 3)
 db
 clusters <- dbscan::extractXi(db, xi = 0.05)
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = clusters$cluster + 1,
-     main = "OPTICS extracted clusters (eps = 0.05, minPts = 3)",
+     main = "OPTICS extracted clusters (eps = 500 m, minPts = 3) for 2018",
      asp = 1)
 
-# Second run with eps = 0.015 and minPts = 5
+# Second run with eps = 150 m and minPts = 5
 db <- dbscan::optics(bicycle_crd_2018, eps = 150, minPts = 5)
 db
 clusters <- dbscan::extractXi(db, xi = 0.05)  # Re-extract clusters for this run
 plot(bicycle_crd_2018, 
      cex = 0.5, pch = 19, col = clusters$cluster + 1,
-     main = "OPTICS extracted clusters (eps = 0.015, minPts = 5)",
+     main = "OPTICS extracted clusters (eps = 150 m, minPts = 5) for 2018",
      asp = 1)
 
 ```
@@ -527,7 +467,7 @@ plot(bicycle_crd_2018,
 | 
 | 
 
-## Task 9:
+## Task 9 Convex Hull:
 
 *From the years 2018 to 2021 for which you computed clusters in Task 6, choose at least two years and apply your polygon delineation method of choice to each of these two years separately. Compute the Jaccard Index (aka Intersection over Union) for pair(s) of selected years and present and discuss the results.*
 
@@ -561,33 +501,10 @@ dbscan::hullplot(bicycle_crd_2019, pt_bike19_reach, asp = 1, main = "Convex Hull
 summary(reachdist)
 ```
 
-## Task 9 (alternative):
+## Task 9 Standard Deviational Ellipse:
 
 ```{r}
 
-#| label: sde-phonTools
-
-## Standard deviational ellipse (SDE) with phonTools::sdellipse()
-
-# sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
-# above from the SF object using sf::st_coordinates().
-
-sde_crd_18 <- phonTools::sdellipse(bicycle_crd_2018, stdev = 1, show = FALSE)
-
-ggplot() +
-  geom_polygon(aes(x = sde_crd_18[,1], y = sde_crd_18[,2]), 
-               colour = "darkgreen", fill = "lightgreen", 
-               linewidth = 0.8, alpha = 0.4) +
-  geom_sf(data = bicycle_accidents_2018) +
-  geom_point(aes(x = mean(bicycle_crd_2018[,1]), y = mean(sde_crd_18[,2])), 
-                 colour = "red", size = 3) +
-  coord_sf(datum = crs_wgs84) +
-  xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
-  ggtitle("Standard Deviational Ellipse for Bicycle Accidents 2018")
-
-```
-
-```{r}
 #| label: sde-phonTools
 
 ## Standard deviational ellipse (SDE) with phonTools::sdellipse()
@@ -601,19 +518,42 @@ ggplot() +
   geom_polygon(aes(x = sde_crd_19[,1], y = sde_crd_19[,2]), 
                colour = "darkgreen", fill = "lightgreen", 
                linewidth = 0.8, alpha = 0.4) +
-  geom_sf(data = bicycle_accidents_2018) +
+  geom_sf(data = bicycle_accidents_2019) +
   geom_point(aes(x = mean(bicycle_crd_2019[,1]), y = mean(sde_crd_19[,2])), 
                  colour = "red", size = 3) +
-  coord_sf(datum = crs_wgs84) +
+  coord_sf(datum = crs_lv95) +
   xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
   ggtitle("Standard Deviational Ellipse for Bicycle Accidents 2019")
+
+```
+
+```{r}
+#| label: sde-phonTools
+
+## Standard deviational ellipse (SDE) with phonTools::sdellipse()
+
+# sdellipse() takes a matrix of x/y coordinates as input, as previously retrieved
+# above from the SF object using sf::st_coordinates().
+
+sde_crd_21 <- phonTools::sdellipse(bicycle_crd_2021, stdev = 1, show = FALSE)
+
+ggplot() +
+  geom_polygon(aes(x = sde_crd_21[,1], y = sde_crd_21[,2]), 
+               colour = "darkgreen", fill = "lightgreen", 
+               linewidth = 0.8, alpha = 0.4) +
+  geom_sf(data = bicycle_accidents_2021) +
+  geom_point(aes(x = mean(bicycle_crd_2021[,1]), y = mean(sde_crd_21[,2])), 
+                 colour = "red", size = 3) +
+  coord_sf(datum = crs_lv95) +
+  xlab("Easting [m]") + ylab("Northing [m]") +    # label axes
+  ggtitle("Standard Deviational Ellipse for Bicycle Accidents 2021")
 
 ```
 
 ### Jaccard Index:
 
 ```{r}
-#In order to compute the jaccard index, the matrices have to become the same length, we therefore shorten all four years to the shortest of the four. 
+# In order to compute the Jaccard index, the matrices have to become the same length, we therefore shorten all four years to the shortest of the four. 
 
 # Find the minimum number of rows among all matrices
 min_length <- min(nrow(bicycle_crd_2018), nrow(bicycle_crd_2019), nrow(bicycle_crd_2020), nrow(bicycle_crd_2021))
@@ -786,15 +726,6 @@ cat("Size of core area with LSCV (50 %): ", hr50$area, sep = "", "\n")
 | The problem of over-smoothing can be observed in the kernel density estimation with HREF, however, the estimation computed with least-squares cross validation (LSCV) is too crowded and thus not very useful to analyse our accident data. The KDE with HREF diagram is better to analyse the extend of the overall accidents, plus it shows where 50% of all the bike accidents (in the year 2018) were located. What is more, the 95% line also shows the outline of the lake and hill of Zurich, where expectedly no accidents happen.
 
 ```{r}
-#Shorten the bicycle_accidents_2018 to the same length as matrix 18 has, namely 632 rows
-# Shorten the sf table to the first 632 rows
-bicycle_accidents_2018 <- bicycle_accidents_2018[1:632, ]
-
-# Check if the sf table now has 632 rows
-nrow(bicycle_accidents_2018)
-```
-
-```{r}
 #| label: kde-ks
 #| warning: false
 
@@ -832,7 +763,7 @@ plot(bicycle_accidents_2018, cex = 0.5, pch = 16, col = "black", add = TRUE)
 length(bicycle_accidents_2018$value) == nrow(matrix18)
 ```
 
-## Task 12 alternative
+## Task 12 KDE using density() function from the stats package
 
 ```{r}
 check_pkg("stats")
@@ -878,7 +809,7 @@ dev.off()
 check_pkg("png")
 png_file <- readPNG('data/density_overlay.png')
 
-mapview::mapview(quart_sf, alpha.regions = 0.3) +
+mapview::mapview(zh_city_districts, alpha.regions = 0.3) +
   mapview(density_raster)
 ```
 
@@ -1171,4 +1102,8 @@ tm_shape(quart_sf) +
 
 ```
 
-\`\`\`
+## Task 19
+
+Discuss your results. What did you find regarding the hot and cold spots in your accident count layers? How do they compare to each other across layers and across (past) methods?
+etc. Discuss also the influence of the parameter settings (e.g., neighbor search distance, spatial
+weight formation) on your results.
